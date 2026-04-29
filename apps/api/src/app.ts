@@ -1,11 +1,15 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import { routes } from "./routes.js";
 import { errorHandler } from "./shared/errors/errorHandler.js";
 import { notFound } from "./shared/middlewares/notFound.js";
+import { apiRateLimiter } from "./shared/middlewares/rateLimiters.js";
 
 export const app = express();
 
+// Helmet adiciona headers seguros sem alterar a regra de login local do MVP.
+app.use(helmet());
 // O frontend pode subir em portas diferentes do Vite; a lista explicita evita liberar origens externas.
 app.use(cors({
   origin: [
@@ -18,6 +22,7 @@ app.use(cors({
 }));
 // JSON precisa vir antes das rotas para login e cadastros receberem body parseado.
 app.use(express.json());
+app.use(apiRateLimiter);
 app.use(routes);
 app.use(notFound);
 app.use(errorHandler);

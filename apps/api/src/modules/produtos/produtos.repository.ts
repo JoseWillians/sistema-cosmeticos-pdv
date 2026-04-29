@@ -22,13 +22,14 @@ export interface Produto extends RowDataPacket {
 }
 
 const selectProdutos = `
-  SELECT p.*, m.nome AS marca, c.nome AS categoria,
+  SELECT p.*, m.nome AS marca, m.ativo AS marca_ativo, c.nome AS categoria, c.ativo AS categoria_ativo,
     COALESCE(v.estoque_disponivel, 0) AS estoque_disponivel,
     COALESCE(v.status_estoque, 'SEM_CONTROLE') AS status_estoque
   FROM produtos p
   INNER JOIN marcas m ON m.id = p.marca_id
   INNER JOIN categorias c ON c.id = p.categoria_id
   LEFT JOIN vw_estoque_produtos v ON v.produto_id = p.id
+  WHERE p.excluido_em IS NULL
 `;
 
 // Repository concentra SQL cru para manter controllers e services livres de detalhes do MySQL.
@@ -49,13 +50,13 @@ export async function listProdutos(filters: { busca?: string; marca_id?: number;
     params.push(filters.categoria_id);
   }
 
-  const sql = `${selectProdutos} ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY p.nome`;
+  const sql = `${selectProdutos} ${where.length ? `AND ${where.join(" AND ")}` : ""} ORDER BY p.nome`;
   const [rows] = await pool.execute<Produto[]>(sql, params);
   return rows;
 }
 
 export async function findProdutoById(id: number) {
-  const [rows] = await pool.execute<Produto[]>(`${selectProdutos} WHERE p.id = ?`, [id]);
+  const [rows] = await pool.execute<Produto[]>(`${selectProdutos} AND p.id = ?`, [id]);
   return rows[0] ?? null;
 }
 
@@ -116,6 +117,6 @@ export async function updateProduto(id: number, data: ProdutoUpdateInput) {
 }
 
 export async function deleteProduto(id: number) {
-  const [result] = await pool.execute<ResultSetHeader>("UPDATE produtos SET ativo = 0 WHERE id = ?", [id]);
+  const [result] = await pool.execute<ResultSetHeader>("UPDATE produtos SET excluido_em = NOW() WHERE id = ? AND excluido_em IS NULL", [id]);
   return result.affectedRows > 0;
 }

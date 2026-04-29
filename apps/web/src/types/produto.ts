@@ -26,7 +26,9 @@ export interface Produto {
   observacoes: string | null;
   ativo: boolean;
   marca: string;
+  marca_ativo?: boolean;
   categoria: string;
+  categoria_ativo?: boolean;
   estoque_disponivel: number;
   status_estoque: StatusEstoque;
 }

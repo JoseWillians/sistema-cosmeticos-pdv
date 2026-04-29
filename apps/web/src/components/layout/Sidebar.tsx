@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, ChevronLeft, ChevronRight, Home, Package, ScanBarcode, Tags } from "lucide-react";
+import { Boxes, ChevronLeft, ChevronRight, ClipboardList, Home, Package, ScanBarcode } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
@@ -6,8 +6,7 @@ import { cn } from "../../lib/utils";
 const items = [
   { label: "Inicio", to: "/", icon: Home },
   { label: "Produtos", to: "/produtos", icon: Package },
-  { label: "Marcas", to: "/marcas", icon: Tags },
-  { label: "Categorias", to: "/categorias", icon: BarChart3 },
+  { label: "Cadastros", to: "/cadastros", icon: ClipboardList },
   { label: "Estoque", to: "/estoque", icon: Boxes },
   { label: "PDV futuro", to: "#", icon: ScanBarcode, disabled: true }
 ];

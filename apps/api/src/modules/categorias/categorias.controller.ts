@@ -18,3 +18,28 @@ export const createCategoriaController: RequestHandler = async (request, respons
     next(error);
   }
 };
+
+export const updateCategoriaController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await categoriasService.update(Number(request.params.id), request.body));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCategoriaStatusController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await categoriasService.setStatus(Number(request.params.id), request.body.ativo));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const archiveCategoriaController: RequestHandler = async (request, response, next) => {
+  try {
+    await categoriasService.archive(Number(request.params.id));
+    response.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};

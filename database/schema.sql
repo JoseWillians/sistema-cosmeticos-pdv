@@ -11,7 +11,10 @@ CREATE TABLE IF NOT EXISTS marcas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(120) NOT NULL UNIQUE,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
-  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  excluido_em DATETIME NULL,
+  KEY idx_marcas_ativo (ativo),
+  KEY idx_marcas_excluido_em (excluido_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS categorias (
@@ -19,7 +22,10 @@ CREATE TABLE IF NOT EXISTS categorias (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(120) NOT NULL UNIQUE,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
-  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  excluido_em DATETIME NULL,
+  KEY idx_categorias_ativo (ativo),
+  KEY idx_categorias_excluido_em (excluido_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS produtos (
@@ -40,9 +46,11 @@ CREATE TABLE IF NOT EXISTS produtos (
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  excluido_em DATETIME NULL,
   UNIQUE KEY uk_produtos_codigo (codigo),
   KEY idx_produtos_marca_id (marca_id),
   KEY idx_produtos_categoria_id (categoria_id),
+  KEY idx_produtos_excluido_em (excluido_em),
   CONSTRAINT fk_produtos_marca FOREIGN KEY (marca_id) REFERENCES marcas(id),
   CONSTRAINT fk_produtos_categoria FOREIGN KEY (categoria_id) REFERENCES categorias(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -84,5 +92,5 @@ FROM produtos p
 INNER JOIN marcas m ON m.id = p.marca_id
 INNER JOIN categorias c ON c.id = p.categoria_id
 LEFT JOIN estoque_movimentos em ON em.produto_id = p.id
-WHERE p.ativo = TRUE
+WHERE p.ativo = TRUE AND p.excluido_em IS NULL
 GROUP BY p.id, p.codigo, p.nome, m.nome, c.nome, p.preco_custo, p.preco_venda, p.estoque_minimo, p.controlar_estoque;

@@ -18,3 +18,28 @@ export const createMarcaController: RequestHandler = async (request, response, n
     next(error);
   }
 };
+
+export const updateMarcaController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await marcasService.update(Number(request.params.id), request.body));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMarcaStatusController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await marcasService.setStatus(Number(request.params.id), request.body.ativo));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const archiveMarcaController: RequestHandler = async (request, response, next) => {
+  try {
+    await marcasService.archive(Number(request.params.id));
+    response.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};

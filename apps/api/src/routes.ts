@@ -7,6 +7,7 @@ import { devRoutes } from "./modules/dev/dev.routes.js";
 import { estoqueRoutes } from "./modules/estoque/estoque.routes.js";
 import { marcasRoutes } from "./modules/marcas/marcas.routes.js";
 import { produtosRoutes } from "./modules/produtos/produtos.routes.js";
+import { loginRateLimiter } from "./shared/middlewares/rateLimiters.js";
 
 export const routes = Router();
 
@@ -15,7 +16,7 @@ routes.get("/health", (_request, response) => {
   response.json({ status: "ok", app: "sistema-cosmeticos-pdv" });
 });
 
-routes.post("/auth/login", (request, response) => {
+routes.post("/auth/login", loginRateLimiter, (request, response) => {
   const { login, senha } = request.body ?? {};
   if (login === "admin" && senha === "admin") {
     return response.json({

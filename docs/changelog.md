@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-04-29 - Segurança básica e cadastros auxiliares
+
+### Adicionado
+
+- Segurança básica no backend com `helmet`.
+- Rate limit geral para API e rate limit mais restrito em `POST /auth/login`.
+- Página unificada `/cadastros` para gerenciar marcas e categorias.
+- Edição, desativação, reativação e arquivamento lógico de marcas.
+- Edição, desativação, reativação e arquivamento lógico de categorias.
+- Campo `excluido_em` em marcas, categorias e produtos para soft delete.
+
+### Alterado
+
+- Menu lateral agora usa item `Cadastros` no lugar de páginas separadas de marcas/categorias.
+- Rotas antigas `/marcas` e `/categorias` do frontend redirecionam para `/cadastros`.
+- Produto arquivado usa `excluido_em = NOW()` em vez de exclusão física.
+- `/dev/routes` e Swagger documentam as novas rotas de marcas/categorias.
+
+### Segurança
+
+- CORS segue restrito a `localhost` e `127.0.0.1` nas portas `5173` e `5174`.
+- `.env` real continua protegido pelo `.gitignore`; exemplos ficam em `.env.example`.
+- Repositories revisados para usar queries parametrizadas nos dados de usuário.
+
+### Regras de negócio
+
+- Desativar: `ativo=false`, reversível, esconde de novos cadastros.
+- Arquivar: preenche `excluido_em`, remove de listagens normais, sem apagar fisicamente.
+- Marcas/categorias com produtos vinculados não podem ser arquivadas; o usuário deve desativar.
+
 ## 2026-04-29 - Clareza no modal de movimentacao de estoque
 
 ### Alterado

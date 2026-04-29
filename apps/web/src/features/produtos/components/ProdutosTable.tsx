@@ -1,4 +1,4 @@
-import { Edit, PackagePlus, Trash2 } from "lucide-react";
+import { Archive, Edit, PackagePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
@@ -26,8 +26,8 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: 
               <td className="px-4 py-3 font-mono text-xs text-cyan-200">{produto.codigo}</td>
               <td className="px-4 py-3 font-medium text-white">{produto.nome}</td>
               <td className="px-4 py-3">{unidadeProdutoLabels[produto.unidade] ?? produto.unidade}</td>
-              <td className="px-4 py-3">{produto.marca}</td>
-              <td className="px-4 py-3">{produto.categoria}</td>
+              <td className="px-4 py-3">{produto.marca} {produto.marca_ativo === false && <Badge status="DEFAULT">Inativa</Badge>}</td>
+              <td className="px-4 py-3">{produto.categoria} {produto.categoria_ativo === false && <Badge status="DEFAULT">Inativa</Badge>}</td>
               <td className="px-4 py-3">{formatNumber(produto.estoque_disponivel)}</td>
               <td className="px-4 py-3">{toCurrency(produto.preco_custo)}</td>
               <td className="px-4 py-3">{toCurrency(produto.preco_venda)}</td>
@@ -36,7 +36,7 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: 
                 <div className="flex gap-2">
                   <Link to={`/produtos/${produto.id}/editar`}><Button variant="secondary" className="h-9 px-3" icon={<Edit className="h-4 w-4" />} /></Link>
                   <Button variant="success" className="h-9 px-3" onClick={() => onMovimentar(produto)} iconLeft={<PackagePlus className="h-4 w-4" />} />
-                  <Button variant="danger" className="h-9 px-3" onClick={() => onDelete(produto.id)} iconLeft={<Trash2 className="h-4 w-4" />} />
+                  <Button variant="danger" className="h-9 px-3" title="Arquivar produto" onClick={() => onDelete(produto.id)} iconLeft={<Archive className="h-4 w-4" />} />
                 </div>
               </td>
             </tr>

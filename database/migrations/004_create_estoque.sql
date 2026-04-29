@@ -53,5 +53,5 @@ FROM produtos p
 INNER JOIN marcas m ON m.id = p.marca_id
 INNER JOIN categorias c ON c.id = p.categoria_id
 LEFT JOIN estoque_movimentos em ON em.produto_id = p.id
-WHERE p.ativo = TRUE
+WHERE p.ativo = TRUE AND p.excluido_em IS NULL
 GROUP BY p.id, p.codigo, p.nome, m.nome, c.nome, p.preco_custo, p.preco_venda, p.estoque_minimo, p.controlar_estoque;

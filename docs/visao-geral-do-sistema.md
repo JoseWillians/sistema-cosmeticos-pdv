@@ -8,14 +8,21 @@ O JW PDV e um sistema local de gestao para loja de cosmeticos. O MVP atual prior
 
 - Login local com usuario `admin` e senha `admin`.
 - Dashboard com indicadores de produtos e estoque.
-- Marcas.
-- Categorias.
+- Cadastros auxiliares de marcas e categorias.
 - Produtos.
 - Estoque.
 
 ## Fluxo de produto
 
 O produto precisa ter marca, categoria, codigo, nome, unidade, preco de custo, preco de venda e estoque inicial no cadastro. A unidade usa lista fixa no codigo: `UN`, `KIT`, `CX` e `PC`.
+
+Marcas e categorias sao cadastros auxiliares dos produtos. Elas podem ser desativadas ou arquivadas:
+
+- Desativar: mantem o registro valido no historico, mas evita uso normal em novos produtos.
+- Reativar: volta a permitir uso em novos cadastros.
+- Arquivar: preenche `excluido_em` e remove das listagens normais, sem apagar fisicamente.
+
+Arquivar marca ou categoria so e permitido quando nao houver produtos vinculados. Produtos antigos continuam mostrando marcas/categorias inativas para preservar o historico e nao quebrar edicoes.
 
 Na edicao, os dados comerciais podem ser alterados, mas o estoque inicial nao e reenviado. Qualquer ajuste de saldo deve ser tratado como movimento de estoque em uma etapa propria.
 
@@ -58,6 +65,13 @@ Para acessar o Adminer:
 - Banco: sistema_cosmeticos
 
 As rotas `/dev` e `/api-docs` dependem de `ENABLE_DEV_TOOLS=true` e existem apenas para uso local.
+
+## Segurança básica atual
+
+- CORS permite apenas frontends locais em `localhost`/`127.0.0.1` nas portas `5173` e `5174`.
+- `helmet` adiciona headers de seguranca HTTP.
+- `express-rate-limit` reduz abuso de requisicoes, com limite mais restrito no login.
+- O login segue local `admin`/`admin`; JWT real ainda nao foi implementado.
 
 ## Arquivos que nao devem subir para o Git
 

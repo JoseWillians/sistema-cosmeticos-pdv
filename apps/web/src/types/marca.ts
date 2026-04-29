@@ -3,4 +3,5 @@ export interface Marca {
   nome: string;
   ativo: boolean;
   criado_em: string;
+  excluido_em?: string | null;
 }

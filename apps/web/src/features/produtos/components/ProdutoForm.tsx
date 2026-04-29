@@ -48,6 +48,8 @@ export function ProdutoForm({
   const [form, setForm] = useState<ProdutoFormState>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const marcasDisponiveis = marcas.filter((marca) => marca.ativo || marca.id === produto?.marca_id);
+  const categoriasDisponiveis = categorias.filter((categoria) => categoria.ativo || categoria.id === produto?.categoria_id);
 
   useEffect(() => {
     if (produto) {
@@ -109,11 +111,12 @@ export function ProdutoForm({
           <Input label="Nome do produto" value={form.nome} onChange={(e) => setField("nome", e.target.value)} required />
           <Select label="Marca" value={form.marca_id || ""} onChange={(e) => setField("marca_id", Number(e.target.value))} required>
             <option value="">Selecione</option>
-            {marcas.map((marca) => <option key={marca.id} value={marca.id}>{marca.nome}</option>)}
+            {/* Inativas ficam escondidas em produto novo, mas aparecem se ja estavam vinculadas ao produto editado. */}
+            {marcasDisponiveis.map((marca) => <option key={marca.id} value={marca.id}>{marca.nome}{!marca.ativo ? " (inativa)" : ""}</option>)}
           </Select>
           <Select label="Categoria" value={form.categoria_id || ""} onChange={(e) => setField("categoria_id", Number(e.target.value))} required>
             <option value="">Selecione</option>
-            {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}
+            {categoriasDisponiveis.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}{!categoria.ativo ? " (inativa)" : ""}</option>)}
           </Select>
           {/* Lista fixa evita texto livre como "unid" ou "caixa" enquanto nao existe modulo de unidades. */}
           <Select label="Unidade" value={form.unidade} onChange={(e) => setField("unidade", e.target.value as UnidadeProduto)} required>
