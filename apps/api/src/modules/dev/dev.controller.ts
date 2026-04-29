@@ -21,7 +21,8 @@ const routeDocs = [
   { method: "PUT", path: "/produtos/:id", description: "Edita dados comerciais do produto.", status: "200 ou 404", body: { nome: "Produto editado", preco_venda: 80.99, unidade: "KIT", estoque_minimo: 6 } },
   { method: "DELETE", path: "/produtos/:id", description: "Inativa produto.", status: "204 ou 404" },
   { method: "GET", path: "/estoque", description: "Lista estoque calculado pela view.", status: "200", link: true },
-  { method: "POST", path: "/estoque/movimentos", description: "Registra reposicao, saida ou ajuste de estoque.", status: "201", body: { produto_id: 1, tipo: "ENTRADA", quantidade: 10, observacao: "Compra de reposicao" } }
+  { method: "POST", path: "/estoque/movimentos", description: "Registra reposicao, saida ou ajuste de estoque.", status: "201", body: { produto_id: 1, tipo: "ENTRADA", quantidade: 10, observacao: "Compra de reposicao" } },
+  { method: "GET", path: "/dashboard/resumo", description: "Retorna KPIs, graficos e estoque critico do dashboard.", status: "200", link: true }
 ];
 
 export const devHomeController: RequestHandler = async (_request, response, next) => {

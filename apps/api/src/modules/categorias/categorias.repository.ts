@@ -61,6 +61,15 @@ export async function countProdutosByCategoria(id: number) {
   return rows[0]?.total ?? 0;
 }
 
+export async function listProdutosByCategoria(id: number, limit = 20) {
+  const safeLimit = Math.min(Math.max(limit, 1), 20);
+  const [rows] = await pool.execute<Array<{ id: number; codigo: string; nome: string } & RowDataPacket>>(
+    `SELECT id, codigo, nome FROM produtos WHERE categoria_id = ? AND excluido_em IS NULL ORDER BY nome LIMIT ${safeLimit}`,
+    [id]
+  );
+  return rows;
+}
+
 export async function archiveCategoria(id: number) {
   const [result] = await pool.execute<ResultSetHeader>(
     "UPDATE categorias SET excluido_em = NOW() WHERE id = ? AND excluido_em IS NULL",

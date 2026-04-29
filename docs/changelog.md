@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-04-29 - Dashboard evoluido e erro de arquivamento detalhado
+
+### Adicionado
+
+- Rota `GET /dashboard/resumo` com KPIs, produtos por categoria, produtos por marca, status do estoque, entradas por periodo e produtos criticos.
+- Dashboard inicial com cards, graficos, tabela de estoque critico, painel explicativo e cards de modulos futuros.
+- Erro `409` estruturado ao tentar arquivar marca/categoria vinculada a produtos.
+- Lista de produtos vinculados no frontend com codigo, nome e link para editar produto.
+
+### Alterado
+
+- Arquivamento bloqueado de marcas/categorias agora informa quais produtos impedem a acao.
+- `/dev/routes` e Swagger passaram a listar a rota do dashboard.
+
+### Regra de negocio reforcada
+
+- Marcas e categorias em uso nao podem ser arquivadas porque produtos antigos dependem desses vinculos para manter historico consistente.
+- O dashboard atual usa apenas produtos, estoque e movimentacoes; modulos como Clientes, Vendas e Caixa aparecem apenas como expansao futura.
+
 ## 2026-04-29 - Segurança básica e cadastros auxiliares
 
 ### Adicionado

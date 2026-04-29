@@ -7,7 +7,7 @@ O JW PDV e um sistema local de gestao para loja de cosmeticos. O MVP atual prior
 ## Modulos atuais
 
 - Login local com usuario `admin` e senha `admin`.
-- Dashboard com indicadores de produtos e estoque.
+- Dashboard com indicadores, graficos e estoque critico baseados em produtos e movimentacoes.
 - Cadastros auxiliares de marcas e categorias.
 - Produtos.
 - Estoque.
@@ -23,6 +23,25 @@ Marcas e categorias sao cadastros auxiliares dos produtos. Elas podem ser desati
 - Arquivar: preenche `excluido_em` e remove das listagens normais, sem apagar fisicamente.
 
 Arquivar marca ou categoria so e permitido quando nao houver produtos vinculados. Produtos antigos continuam mostrando marcas/categorias inativas para preservar o historico e nao quebrar edicoes.
+
+Quando uma tentativa de arquivamento falha por vinculo com produtos, a API retorna erro `409` com uma lista dos produtos que impedem a acao. Esse erro detalhado ajuda o usuario a editar, trocar marca/categoria ou arquivar os produtos antes de tentar novamente.
+
+## Dashboard
+
+O dashboard atual foca na fase operacional existente do sistema:
+
+- Total de produtos.
+- Produtos em estoque.
+- Produtos com estoque baixo.
+- Produtos esgotados.
+- Valor estimado do estoque por custo e venda.
+- Produtos por categoria.
+- Produtos por marca.
+- Status do estoque.
+- Entradas de estoque por periodo.
+- Produtos com menor estoque.
+
+Clientes, Vendas, Caixa, Financeiro e Relatorios avancados aparecem como cards `Em breve`. Eles sao apenas placeholders visuais e ainda nao possuem tabelas, regras ou dados reais.
 
 Na edicao, os dados comerciais podem ser alterados, mas o estoque inicial nao e reenviado. Qualquer ajuste de saldo deve ser tratado como movimento de estoque em uma etapa propria.
 

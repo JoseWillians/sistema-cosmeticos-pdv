@@ -1,5 +1,5 @@
 import { AppError } from "../../shared/errors/AppError.js";
-import { archiveMarca, countProdutosByMarca, createMarca, findMarcaById, findMarcaByNome, listMarcas, setMarcaStatus, updateMarca } from "./marcas.repository.js";
+import { archiveMarca, countProdutosByMarca, createMarca, findMarcaById, findMarcaByNome, listMarcas, listProdutosByMarca, setMarcaStatus, updateMarca } from "./marcas.repository.js";
 import type { MarcaInput, MarcaUpdateInput } from "./marcas.schema.js";
 
 export const marcasService = {
@@ -23,8 +23,15 @@ export const marcasService = {
   async archive(id: number) {
     if (!await findMarcaById(id)) throw new AppError("Marca nao encontrada.", 404);
     // Arquivar e soft delete: nao remove fisicamente e bloqueia se houver produto vinculado ativo.
-    if (await countProdutosByMarca(id) > 0) {
-      throw new AppError("Não é possível excluir esta marca porque existem produtos vinculados a ela. Você pode desativá-la.", 409);
+    const total = await countProdutosByMarca(id);
+    if (total > 0) {
+      // Mostrar os produtos vinculados ajuda o usuario a corrigir o cadastro antes de arquivar.
+      const products = await listProdutosByMarca(id, 20);
+      throw new AppError("Não é possível arquivar esta marca porque existem produtos vinculados.", 409, {
+        type: "BRAND_IN_USE",
+        products,
+        moreCount: Math.max(total - products.length, 0)
+      });
     }
     await archiveMarca(id);
   }

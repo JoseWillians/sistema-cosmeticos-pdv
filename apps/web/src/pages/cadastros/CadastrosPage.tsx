@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Archive, Edit, RotateCcw, Save, ToggleLeft, ToggleRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ErrorMessage } from "../../components/feedback/ErrorMessage";
 import { Loading } from "../../components/feedback/Loading";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -15,6 +16,11 @@ import type { Marca } from "../../types/marca";
 
 type Tab = "marcas" | "categorias";
 type CadastroItem = Marca | Categoria;
+type LinkedProductError = {
+  message: string;
+  products?: Array<{ id: number; codigo: string; nome: string }>;
+  moreCount?: number;
+};
 
 export function CadastrosPage() {
   const [tab, setTab] = useState<Tab>("marcas");
@@ -88,11 +94,13 @@ function CadastroManager({
   const [nome, setNome] = useState("");
   const [editing, setEditing] = useState<CadastroItem | null>(null);
   const [error, setError] = useState("");
+  const [linkedError, setLinkedError] = useState<LinkedProductError | null>(null);
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function run(action: () => Promise<unknown>, message: string) {
     setError("");
+    setLinkedError(null);
     setSuccess("");
     setLoading(true);
     try {
@@ -103,8 +111,10 @@ function CadastroManager({
       await onReload();
     } catch (error) {
       const data = typeof error === "object" && error !== null && "response" in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data
+        ? (error as { response?: { data?: LinkedProductError } }).response?.data
         : undefined;
+      // Erro 409 com produtos vinculados orienta o usuario sobre o que precisa corrigir antes de arquivar.
+      if (data?.products?.length) setLinkedError(data);
       setError(data?.message ?? "Nao foi possivel concluir a acao.");
     } finally {
       setLoading(false);
@@ -140,6 +150,21 @@ function CadastroManager({
         <h2 className="mb-4 text-lg font-bold text-white">{editing ? `Editar ${itemLabel}` : `Nova ${itemLabel}`}</h2>
         <form className="grid gap-4" onSubmit={handleSubmit}>
           {error && <ErrorMessage message={error} />}
+          {linkedError?.products?.length && (
+            <div className="rounded-lg border border-amber-400/25 bg-amber-500/10 p-4 text-sm text-amber-50">
+              <p className="font-semibold">Produtos vinculados:</p>
+              <ul className="mt-2 grid gap-2">
+                {linkedError.products.map((produto) => (
+                  <li key={produto.id} className="flex items-center justify-between gap-3 rounded-md bg-slate-950/40 px-3 py-2">
+                    <span><strong className="font-mono text-cyan-200">{produto.codigo}</strong> - {produto.nome}</span>
+                    <Link className="text-xs font-semibold text-cyan-200 hover:text-cyan-100" to={`/produtos/${produto.id}/editar`}>Editar produto</Link>
+                  </li>
+                ))}
+              </ul>
+              {!!linkedError.moreCount && <p className="mt-2 text-amber-100">E mais {linkedError.moreCount} produto(s).</p>}
+              <Link to="/produtos"><Button type="button" variant="secondary" className="mt-3">Abrir produtos</Button></Link>
+            </div>
+          )}
           {success && <div className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{success}</div>}
           <Input label="Nome" value={nome} onChange={(event) => setNome(event.target.value)} required />
           <div className="flex gap-3">

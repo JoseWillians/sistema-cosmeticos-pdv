@@ -34,7 +34,8 @@ export const swaggerSpec = swaggerJsdoc({
       "/produtos": { get: { summary: "Lista produtos", responses: { "200": { description: "Lista de produtos" } } }, post: { summary: "Cria produto", requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ProdutoCreate" } } } }, responses: { "201": { description: "Produto criado" } } } },
       "/produtos/{id}": { get: { summary: "Busca produto", parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }], responses: { "200": { description: "Produto" } } }, put: { summary: "Edita produto", parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }], requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ProdutoUpdate" } } } }, responses: { "200": { description: "Produto editado" } } }, delete: { summary: "Inativa produto", responses: { "204": { description: "Produto inativado" } } } },
       "/estoque": { get: { summary: "Lista estoque", responses: { "200": { description: "Estoque calculado" } } } },
-      "/estoque/movimentos": { post: { summary: "Registra movimento de estoque", requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/EstoqueMovimentoCreate" } } } }, responses: { "201": { description: "Movimento criado" }, "400": { description: "Dados invalidos" } } } }
+      "/estoque/movimentos": { post: { summary: "Registra movimento de estoque", requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/EstoqueMovimentoCreate" } } } }, responses: { "201": { description: "Movimento criado" }, "400": { description: "Dados invalidos" } } } },
+      "/dashboard/resumo": { get: { summary: "Resumo agregado do dashboard", responses: { "200": { description: "KPIs e graficos de produtos e estoque" } } } }
     }
   },
   apis: []

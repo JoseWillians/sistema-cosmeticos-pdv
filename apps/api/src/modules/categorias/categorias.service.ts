@@ -1,5 +1,5 @@
 import { AppError } from "../../shared/errors/AppError.js";
-import { archiveCategoria, countProdutosByCategoria, createCategoria, findCategoriaById, findCategoriaByNome, listCategorias, setCategoriaStatus, updateCategoria } from "./categorias.repository.js";
+import { archiveCategoria, countProdutosByCategoria, createCategoria, findCategoriaById, findCategoriaByNome, listCategorias, listProdutosByCategoria, setCategoriaStatus, updateCategoria } from "./categorias.repository.js";
 import type { CategoriaInput, CategoriaUpdateInput } from "./categorias.schema.js";
 
 export const categoriasService = {
@@ -22,8 +22,14 @@ export const categoriasService = {
   },
   async archive(id: number) {
     if (!await findCategoriaById(id)) throw new AppError("Categoria nao encontrada.", 404);
-    if (await countProdutosByCategoria(id) > 0) {
-      throw new AppError("Não é possível excluir esta categoria porque existem produtos vinculados a ela. Você pode desativá-la.", 409);
+    const total = await countProdutosByCategoria(id);
+    if (total > 0) {
+      const products = await listProdutosByCategoria(id, 20);
+      throw new AppError("Não é possível arquivar esta categoria porque existem produtos vinculados.", 409, {
+        type: "CATEGORY_IN_USE",
+        products,
+        moreCount: Math.max(total - products.length, 0)
+      });
     }
     await archiveCategoria(id);
   }
