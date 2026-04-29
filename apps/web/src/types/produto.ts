@@ -1,0 +1,48 @@
+import type { StatusEstoque } from "./estoque";
+
+export const unidadesProduto = ["UN", "KIT", "CX", "PC"] as const;
+export type UnidadeProduto = (typeof unidadesProduto)[number];
+
+export const unidadeProdutoLabels: Record<UnidadeProduto, string> = {
+  UN: "UN - Unidade",
+  KIT: "KIT - Kit",
+  CX: "CX - Caixa",
+  PC: "PC - Pacote"
+};
+
+export interface Produto {
+  id: number;
+  marca_id: number;
+  categoria_id: number;
+  codigo: string;
+  codigo_barras: string | null;
+  nome: string;
+  unidade: UnidadeProduto;
+  preco_custo: number;
+  preco_venda: number;
+  estoque_minimo: number;
+  controlar_estoque: boolean;
+  descricao: string | null;
+  observacoes: string | null;
+  ativo: boolean;
+  marca: string;
+  categoria: string;
+  estoque_disponivel: number;
+  status_estoque: StatusEstoque;
+}
+
+export interface ProdutoPayload {
+  marca_id: number;
+  categoria_id: number;
+  codigo: string;
+  codigo_barras?: string | null;
+  nome: string;
+  unidade: UnidadeProduto;
+  preco_custo: number;
+  preco_venda: number;
+  estoque_minimo?: number;
+  controlar_estoque?: boolean;
+  estoque_inicial?: number;
+  descricao?: string | null;
+  observacoes?: string | null;
+}
