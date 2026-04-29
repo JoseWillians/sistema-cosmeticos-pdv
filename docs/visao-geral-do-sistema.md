@@ -121,7 +121,15 @@ As rotas `/dev` e `/api-docs` dependem de `ENABLE_DEV_TOOLS=true` e existem apen
 - CORS permite apenas frontends locais em `localhost`/`127.0.0.1` nas portas `5173` e `5174`.
 - `helmet` adiciona headers de seguranca HTTP.
 - `express-rate-limit` reduz abuso de requisicoes, com limite mais restrito no login.
+- Em desenvolvimento, o rate limit geral e mais folgado para nao bloquear testes locais, dashboards e hot reloads.
+- `/health` e ferramentas locais `/dev` e `/api-docs` ficam liberadas do rate limit em ambiente local para diagnostico da API.
 - O login segue local `admin`/`admin`; JWT real ainda nao foi implementado.
+
+## Busca e indices
+
+A busca de produtos usa debounce no frontend para evitar uma chamada a API a cada tecla digitada. No backend/banco, MySQL usa indices em campos de busca e filtro como codigo, nome, marca, categoria, ativo e `excluido_em`.
+
+Nao ha arvore binaria manual nem arvore de decisao no codigo da aplicacao. Para este sistema, a abordagem correta e usar indices do MySQL, filtros parametrizados e debounce na interface.
 
 ## Arquivos que nao devem subir para o Git
 

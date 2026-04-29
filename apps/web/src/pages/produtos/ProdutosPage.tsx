@@ -23,6 +23,7 @@ export function ProdutosPage() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
   const [marcaId, setMarcaId] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
   const [status, setStatus] = useState<"ativos" | "arquivados" | "todos">("ativos");
@@ -35,7 +36,7 @@ export function ProdutosPage() {
   async function load() {
     setLoading(true);
     const [produtosData, marcasData, categoriasData] = await Promise.all([
-      getProdutos({ busca, marca_id: marcaId, categoria_id: categoriaId, status }),
+      getProdutos({ busca: buscaDebounced, marca_id: marcaId, categoria_id: categoriaId, status }),
       getMarcas(),
       getCategorias()
     ]);
@@ -45,7 +46,13 @@ export function ProdutosPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [busca, marcaId, categoriaId, status]);
+  useEffect(() => {
+    // Debounce evita uma chamada HTTP a cada tecla e reduz chance de acionar rate limit local.
+    const timer = window.setTimeout(() => setBuscaDebounced(busca), 400);
+    return () => window.clearTimeout(timer);
+  }, [busca]);
+
+  useEffect(() => { load(); }, [buscaDebounced, marcaId, categoriaId, status]);
 
   async function handleArchiveConfirm() {
     if (!produtoArquivar) return;

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-04-29 - Rate limit local e busca com debounce
+
+### Corrigido
+
+- Rate limit geral ficou menos agressivo em desenvolvimento: `1000` requisicoes por minuto.
+- Rate limit de producao segue mais restritivo: `300` requisicoes a cada `15` minutos.
+- `/health`, `/dev`, `/dev/database`, `/dev/routes` e `/api-docs` nao sao bloqueados pelo rate limit quando o ambiente e local/dev tools.
+- Mensagem de rate limit agora retorna JSON com `code: RATE_LIMIT_EXCEEDED`.
+
+### Mantido
+
+- `POST /auth/login` continua com limite especifico e mais restrito: `20` tentativas em desenvolvimento e `10` em producao a cada `15` minutos.
+
+### Adicionado
+
+- Debounce de `400ms` na busca de Produtos para evitar requisição a cada tecla.
+- Migration `008_add_search_indexes.sql` com indices seguros para buscas/filtros comuns.
+
+### Observacao tecnica
+
+- Busca deve usar debounce no frontend e indices no MySQL. Nao foi implementada arvore binaria ou arvore de decisao porque o problema era bloqueio por rate limit, nao algoritmo de busca em memoria.
+
 ## 2026-04-29 - Cadastros inteligentes e precos promocionais
 
 ### Adicionado

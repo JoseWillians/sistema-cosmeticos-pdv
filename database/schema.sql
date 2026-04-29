@@ -54,8 +54,10 @@ CREATE TABLE IF NOT EXISTS produtos (
   atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   excluido_em DATETIME NULL,
   UNIQUE KEY uk_produtos_codigo (codigo),
+  KEY idx_produtos_nome (nome),
   KEY idx_produtos_marca_id (marca_id),
   KEY idx_produtos_categoria_id (categoria_id),
+  KEY idx_produtos_ativo (ativo),
   KEY idx_produtos_excluido_em (excluido_em),
   CONSTRAINT fk_produtos_marca FOREIGN KEY (marca_id) REFERENCES marcas(id),
   CONSTRAINT fk_produtos_categoria FOREIGN KEY (categoria_id) REFERENCES categorias(id)
