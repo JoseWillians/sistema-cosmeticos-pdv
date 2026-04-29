@@ -6,9 +6,18 @@ export const listProdutosController: RequestHandler = async (request, response, 
     const produtos = await produtosService.list({
       busca: request.query.busca as string | undefined,
       marca_id: request.query.marca_id ? Number(request.query.marca_id) : undefined,
-      categoria_id: request.query.categoria_id ? Number(request.query.categoria_id) : undefined
+      categoria_id: request.query.categoria_id ? Number(request.query.categoria_id) : undefined,
+      status: request.query.status as "ativos" | "arquivados" | "todos" | undefined
     });
     response.json(produtos);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restoreProdutoController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await produtosService.restore(Number(request.params.id)));
   } catch (error) {
     next(error);
   }

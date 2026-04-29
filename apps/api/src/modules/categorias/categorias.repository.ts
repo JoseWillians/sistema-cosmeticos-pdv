@@ -11,8 +11,14 @@ export interface Categoria extends RowDataPacket {
 }
 
 // Categorias ainda sao simples, mas manter repository separa SQL da regra de tela/API.
-export async function listCategorias() {
-  const [rows] = await pool.query<Categoria[]>("SELECT * FROM categorias WHERE excluido_em IS NULL ORDER BY nome");
+export async function listCategorias(status: "ativos" | "inativos" | "arquivados" | "todos" = "todos") {
+  const where = {
+    ativos: "WHERE excluido_em IS NULL AND ativo = TRUE",
+    inativos: "WHERE excluido_em IS NULL AND ativo = FALSE",
+    arquivados: "WHERE excluido_em IS NOT NULL",
+    todos: ""
+  }[status];
+  const [rows] = await pool.query<Categoria[]>(`SELECT * FROM categorias ${where} ORDER BY excluido_em IS NOT NULL, ativo DESC, nome`);
   return rows;
 }
 
@@ -29,15 +35,28 @@ export async function findCategoriaById(id: number) {
   return rows[0] ?? null;
 }
 
+export async function findCategoriaByIdIncludingArchived(id: number) {
+  const [rows] = await pool.execute<Categoria[]>("SELECT * FROM categorias WHERE id = ?", [id]);
+  return rows[0] ?? null;
+}
+
 export async function findCategoriaByNome(nome: string, ignoreId?: number) {
   const params: Array<string | number> = [nome];
-  let sql = "SELECT * FROM categorias WHERE nome = ?";
+  let sql = "SELECT * FROM categorias WHERE LOWER(TRIM(nome)) = LOWER(TRIM(?))";
   if (ignoreId) {
     sql += " AND id <> ?";
     params.push(ignoreId);
   }
   const [rows] = await pool.execute<Categoria[]>(sql, params);
   return rows[0] ?? null;
+}
+
+export async function restoreCategoria(id: number, nome?: string) {
+  await pool.execute(
+    "UPDATE categorias SET nome = COALESCE(?, nome), ativo = TRUE, excluido_em = NULL WHERE id = ?",
+    [nome ?? null, id]
+  );
+  return findCategoriaById(id);
 }
 
 export async function updateCategoria(id: number, data: CategoriaUpdateInput) {

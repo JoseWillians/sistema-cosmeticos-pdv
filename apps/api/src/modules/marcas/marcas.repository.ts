@@ -11,8 +11,14 @@ export interface Marca extends RowDataPacket {
 }
 
 // Acesso direto a marcas fica isolado aqui para facilitar trocar filtros ou paginacao depois.
-export async function listMarcas() {
-  const [rows] = await pool.query<Marca[]>("SELECT * FROM marcas WHERE excluido_em IS NULL ORDER BY nome");
+export async function listMarcas(status: "ativos" | "inativos" | "arquivados" | "todos" = "todos") {
+  const where = {
+    ativos: "WHERE excluido_em IS NULL AND ativo = TRUE",
+    inativos: "WHERE excluido_em IS NULL AND ativo = FALSE",
+    arquivados: "WHERE excluido_em IS NOT NULL",
+    todos: ""
+  }[status];
+  const [rows] = await pool.query<Marca[]>(`SELECT * FROM marcas ${where} ORDER BY excluido_em IS NOT NULL, ativo DESC, nome`);
   return rows;
 }
 
@@ -29,15 +35,28 @@ export async function findMarcaById(id: number) {
   return rows[0] ?? null;
 }
 
+export async function findMarcaByIdIncludingArchived(id: number) {
+  const [rows] = await pool.execute<Marca[]>("SELECT * FROM marcas WHERE id = ?", [id]);
+  return rows[0] ?? null;
+}
+
 export async function findMarcaByNome(nome: string, ignoreId?: number) {
   const params: Array<string | number> = [nome];
-  let sql = "SELECT * FROM marcas WHERE nome = ?";
+  let sql = "SELECT * FROM marcas WHERE LOWER(TRIM(nome)) = LOWER(TRIM(?))";
   if (ignoreId) {
     sql += " AND id <> ?";
     params.push(ignoreId);
   }
   const [rows] = await pool.execute<Marca[]>(sql, params);
   return rows[0] ?? null;
+}
+
+export async function restoreMarca(id: number, nome?: string) {
+  await pool.execute(
+    "UPDATE marcas SET nome = COALESCE(?, nome), ativo = TRUE, excluido_em = NULL WHERE id = ?",
+    [nome ?? null, id]
+  );
+  return findMarcaById(id);
 }
 
 export async function updateMarca(id: number, data: MarcaUpdateInput) {

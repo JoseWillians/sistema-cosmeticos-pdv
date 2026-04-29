@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Select } from "../../../components/ui/Select";
 import { formatNumber } from "../../../lib/formatters";
+import { parseCurrencyInput } from "../../../lib/parseCurrencyInput";
 import type { EstoqueMovimentoPayload, TipoMovimentoEstoque } from "../../../types/estoque";
 
 interface ProdutoMovimentavel {
@@ -31,6 +32,8 @@ export function MovimentoEstoqueModal({
 }) {
   const [tipo, setTipo] = useState<TipoMovimentoEstoque>("ENTRADA");
   const [quantidade, setQuantidade] = useState("1");
+  const [custoUnitario, setCustoUnitario] = useState("");
+  const [compraPromocional, setCompraPromocional] = useState(false);
   const [observacao, setObservacao] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -40,6 +43,7 @@ export function MovimentoEstoqueModal({
     ? Number(produto.estoque_disponivel) + quantidadeMovimentar
     : Number(produto.estoque_disponivel) - quantidadeMovimentar;
   const estoqueNegativo = estoqueFinalPrevisto < 0;
+  const aceitaDadosCompra = tipo === "ENTRADA" || tipo === "AJUSTE_ENTRADA";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -55,6 +59,8 @@ export function MovimentoEstoqueModal({
         produto_id: Number(produto.produto_id),
         tipo,
         quantidade: quantidadeInteira,
+        custo_unitario: aceitaDadosCompra && custoUnitario.trim() ? parseCurrencyInput(custoUnitario) : null,
+        compra_promocional: aceitaDadosCompra ? compraPromocional : false,
         observacao: observacao.trim() || undefined
       };
       // Observacao deste modal documenta o movimento, sem alterar a observacao cadastral do produto.
@@ -103,6 +109,15 @@ export function MovimentoEstoqueModal({
           {estoqueNegativo && (
             <div className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
               Este movimento deixara o estoque abaixo de zero. Confira a quantidade antes de salvar.
+            </div>
+          )}
+          {aceitaDadosCompra && (
+            <div className="grid gap-4 rounded-lg border border-white/10 bg-slate-950/25 p-4 sm:grid-cols-2">
+              <Input label="Custo unitario desta entrada" inputMode="decimal" value={custoUnitario} onChange={(event) => setCustoUnitario(event.target.value)} />
+              <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-950/35 px-3 text-sm text-slate-200">
+                <input type="checkbox" checked={compraPromocional} onChange={(event) => setCompraPromocional(event.target.checked)} />
+                Compra promocional?
+              </label>
             </div>
           )}
           <Input

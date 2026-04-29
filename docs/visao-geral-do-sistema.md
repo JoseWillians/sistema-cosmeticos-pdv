@@ -22,6 +22,8 @@ Marcas e categorias sao cadastros auxiliares dos produtos. Elas podem ser desati
 - Reativar: volta a permitir uso em novos cadastros.
 - Arquivar: preenche `excluido_em` e remove das listagens normais, sem apagar fisicamente.
 
+Ao cadastrar uma marca ou categoria, o sistema compara o nome normalizado, ignorando maiusculas/minusculas e espacos extras. Se ja existir um registro ativo, a API bloqueia a duplicidade. Se existir um registro inativo, ele e reativado. Se existir um registro arquivado, ele e restaurado com `excluido_em = NULL`.
+
 Arquivar marca ou categoria so e permitido quando nao houver produtos vinculados. Produtos antigos continuam mostrando marcas/categorias inativas para preservar o historico e nao quebrar edicoes.
 
 Quando uma tentativa de arquivamento falha por vinculo com produtos, a API retorna erro `409` com uma lista dos produtos que impedem a acao. Esse erro detalhado ajuda o usuario a editar, trocar marca/categoria ou arquivar os produtos antes de tentar novamente.
@@ -29,6 +31,23 @@ Quando uma tentativa de arquivamento falha por vinculo com produtos, a API retor
 Produtos tambem usam arquivamento logico. Ao arquivar um produto, o sistema preenche `produtos.excluido_em` e remove o item das listagens principais. O registro continua no banco e as movimentacoes antigas de estoque nao sao apagadas.
 
 Produto arquivado nao aparece em Produtos nem no Estoque ativo. Essa regra evita que o usuario movimente ou conte produto que saiu da operacao atual, mas preserva o historico para consulta tecnica no banco e no painel dev.
+
+O codigo e a identidade principal do produto. Ao cadastrar um produto com codigo ja existente e ativo, o sistema bloqueia duplicidade. Se o codigo existir em produto arquivado, o produto antigo e restaurado e atualizado com os novos dados, sem criar outra linha.
+
+Se um produto arquivado for restaurado por cadastro e o estoque inicial informado for diferente do saldo calculado pelos movimentos antigos, a API registra um movimento automatico de ajuste para chegar ao novo saldo desejado. Os movimentos antigos continuam preservados.
+
+## Precos promocionais
+
+Produtos possuem preco padrao de custo e venda. Campos promocionais opcionais registram uma condicao especial sem duplicar o produto:
+
+- `preco_custo_promocional`
+- `preco_venda_promocional`
+- `promocao_ativa`
+- `promocao_inicio`
+- `promocao_fim`
+- `promocao_observacao`
+
+O preco promocional nao apaga nem substitui o preco padrao. Ele apenas indica uma condicao comercial ativa ou planejada. Vendas reais ainda nao existem nesta fase.
 
 ## Dashboard
 
@@ -69,6 +88,8 @@ Tipos de movimento:
 A observacao informada no modal fica salva somente em `estoque_movimentos.observacao`. Ela documenta o motivo daquele movimento e nao altera a observacao do cadastro do produto.
 
 Produtos arquivados nao podem receber novos movimentos. Se houver erro operacional em um produto arquivado, a correcao deve preservar o historico e ser tratada por uma decisao explicita de cadastro, nao por exclusao fisica de movimentos antigos.
+
+Em entradas de estoque, o movimento pode registrar `custo_unitario` e `compra_promocional`. Esses campos documentam quanto aquela reposicao custou e se veio de uma condicao especial. Eles nao alteram automaticamente o preco padrao do produto e preparam o sistema para calculos futuros de lucro, custo medio ou FIFO.
 
 Marcas e categorias so sao bloqueadas por produtos ativos vinculados (`excluido_em IS NULL`). Produtos arquivados mantem o vinculo historico, mas nao impedem o arquivamento de marca/categoria porque ja sairam das listagens operacionais.
 

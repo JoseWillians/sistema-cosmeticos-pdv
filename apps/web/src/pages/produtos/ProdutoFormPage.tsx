@@ -37,7 +37,8 @@ export function ProdutoFormPage() {
       const { estoque_inicial: _estoqueInicial, ...payloadEdicao } = payload;
       await updateProduto(id, payloadEdicao);
     } else {
-      await createProduto(payload);
+      const result = await createProduto(payload);
+      if (result.restored) window.alert("Produto arquivado restaurado e atualizado com sucesso.");
     }
     navigate("/produtos");
   }

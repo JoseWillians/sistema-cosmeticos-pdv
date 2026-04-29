@@ -1,10 +1,18 @@
 import type { RequestHandler } from "express";
 import { marcasService } from "./marcas.service.js";
 
-export const listMarcasController: RequestHandler = async (_request, response, next) => {
+export const listMarcasController: RequestHandler = async (request, response, next) => {
   try {
-    const marcas = await marcasService.list();
+    const marcas = await marcasService.list(request.query.status as "ativos" | "inativos" | "arquivados" | "todos" | undefined);
     response.json(marcas);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restoreMarcaController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await marcasService.restore(Number(request.params.id)));
   } catch (error) {
     next(error);
   }

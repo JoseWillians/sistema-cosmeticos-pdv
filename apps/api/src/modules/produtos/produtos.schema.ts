@@ -15,6 +15,13 @@ export const produtoCreateSchema = z.object({
   unidade: z.enum(unidadesProduto).default("UN"),
   preco_custo: decimal,
   preco_venda: decimal,
+  // Promocao nao duplica produto; ela registra uma condicao comercial especial no mesmo cadastro.
+  preco_custo_promocional: decimal.optional().nullable(),
+  preco_venda_promocional: decimal.optional().nullable(),
+  promocao_ativa: z.boolean().optional().default(false),
+  promocao_inicio: z.string().optional().nullable(),
+  promocao_fim: z.string().optional().nullable(),
+  promocao_observacao: z.string().optional().nullable(),
   // Estoque e contado em unidades inteiras no MVP para evitar saldos fracionados no PDV.
   estoque_minimo: z.coerce.number().int().min(0).optional().default(0),
   controlar_estoque: z.boolean().optional().default(true),

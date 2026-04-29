@@ -18,5 +18,7 @@ export interface EstoqueMovimentoPayload {
   produto_id: number;
   tipo: TipoMovimentoEstoque;
   quantidade: number;
+  custo_unitario?: number | null;
+  compra_promocional?: boolean;
   observacao?: string | null;
 }

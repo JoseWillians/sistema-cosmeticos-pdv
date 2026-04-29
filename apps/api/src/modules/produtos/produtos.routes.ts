@@ -5,6 +5,7 @@ import {
   deleteProdutoController,
   getProdutoController,
   listProdutosController,
+  restoreProdutoController,
   updateProdutoController
 } from "./produtos.controller.js";
 import { produtoCreateSchema, produtoUpdateSchema } from "./produtos.schema.js";
@@ -15,4 +16,5 @@ produtosRoutes.get("/", listProdutosController);
 produtosRoutes.get("/:id", getProdutoController);
 produtosRoutes.post("/", validateBody(produtoCreateSchema), createProdutoController);
 produtosRoutes.put("/:id", validateBody(produtoUpdateSchema), updateProdutoController);
+produtosRoutes.patch("/:id/restore", restoreProdutoController);
 produtosRoutes.delete("/:id", deleteProdutoController);

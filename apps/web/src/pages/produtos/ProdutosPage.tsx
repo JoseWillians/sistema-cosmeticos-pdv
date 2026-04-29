@@ -8,7 +8,7 @@ import { Loading } from "../../components/feedback/Loading";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { ProdutoFiltros } from "../../features/produtos/components/ProdutoFiltros";
 import { ProdutosTable } from "../../features/produtos/components/ProdutosTable";
-import { deleteProduto, getProdutos } from "../../features/produtos/services/produtosService";
+import { deleteProduto, getProdutos, restoreProduto } from "../../features/produtos/services/produtosService";
 import { MovimentoEstoqueModal } from "../../features/estoque/components/MovimentoEstoqueForm";
 import { createMovimentoEstoque } from "../../features/estoque/services/estoqueService";
 import { getMarcas } from "../../features/marcas/services/marcasService";
@@ -25,6 +25,7 @@ export function ProdutosPage() {
   const [busca, setBusca] = useState("");
   const [marcaId, setMarcaId] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
+  const [status, setStatus] = useState<"ativos" | "arquivados" | "todos">("ativos");
   const [loading, setLoading] = useState(true);
   const [produtoMovimento, setProdutoMovimento] = useState<Produto | null>(null);
   const [produtoArquivar, setProdutoArquivar] = useState<Produto | null>(null);
@@ -34,7 +35,7 @@ export function ProdutosPage() {
   async function load() {
     setLoading(true);
     const [produtosData, marcasData, categoriasData] = await Promise.all([
-      getProdutos({ busca, marca_id: marcaId, categoria_id: categoriaId }),
+      getProdutos({ busca, marca_id: marcaId, categoria_id: categoriaId, status }),
       getMarcas(),
       getCategorias()
     ]);
@@ -44,7 +45,7 @@ export function ProdutosPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [busca, marcaId, categoriaId]);
+  useEffect(() => { load(); }, [busca, marcaId, categoriaId, status]);
 
   async function handleArchiveConfirm() {
     if (!produtoArquivar) return;
@@ -71,13 +72,25 @@ export function ProdutosPage() {
     await load();
   }
 
+  async function handleRestore(produto: Produto) {
+    await restoreProduto(produto.id);
+    await load();
+  }
+
   return (
     <>
       <PageHeader title="Produtos" description="Cadastro inicial de produtos e precos." actions={<Link to="/produtos/novo"><Button iconLeft={<Plus className="h-4 w-4" />}>Novo Produto</Button></Link>} />
       <Card className="mb-5">
         <ProdutoFiltros busca={busca} marcaId={marcaId} categoriaId={categoriaId} marcas={marcas} categorias={categorias} onBusca={setBusca} onMarca={setMarcaId} onCategoria={setCategoriaId} />
+        <div className="mt-4 flex flex-wrap gap-2">
+          {(["ativos", "arquivados", "todos"] as const).map((item) => (
+            <Button key={item} type="button" variant={status === item ? "primary" : "secondary"} onClick={() => setStatus(item)}>
+              {item === "ativos" ? "Ativos" : item === "arquivados" ? "Arquivados" : "Todos"}
+            </Button>
+          ))}
+        </div>
       </Card>
-      {loading ? <Loading /> : <ProdutosTable produtos={produtos} onDelete={setProdutoArquivar} onMovimentar={setProdutoMovimento} />}
+      {loading ? <Loading /> : <ProdutosTable produtos={produtos} onDelete={setProdutoArquivar} onMovimentar={setProdutoMovimento} onRestore={handleRestore} />}
       {produtoMovimento && (
         <MovimentoEstoqueModal
           produto={{

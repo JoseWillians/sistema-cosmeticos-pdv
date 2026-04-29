@@ -1,16 +1,27 @@
 import { AppError } from "../../shared/errors/AppError.js";
-import { archiveMarca, countProdutosByMarca, createMarca, findMarcaById, findMarcaByNome, listMarcas, listProdutosByMarca, setMarcaStatus, updateMarca } from "./marcas.repository.js";
+import { normalizeName } from "../../shared/utils/normalizeName.js";
+import { archiveMarca, countProdutosByMarca, createMarca, findMarcaById, findMarcaByIdIncludingArchived, findMarcaByNome, listMarcas, listProdutosByMarca, restoreMarca, setMarcaStatus, updateMarca } from "./marcas.repository.js";
 import type { MarcaInput, MarcaUpdateInput } from "./marcas.schema.js";
 
 export const marcasService = {
   list: listMarcas,
   async create(data: MarcaInput) {
-    if (await findMarcaByNome(data.nome)) throw new AppError("Ja existe uma marca com este nome.", 409);
-    return createMarca(data);
+    const nome = normalizeName(data.nome);
+    const existing = await findMarcaByNome(nome);
+    if (existing?.excluido_em) {
+      // Recriar uma marca arquivada geraria duplicidade historica; restaurar mantem o mesmo id.
+      return { ...(await restoreMarca(existing.id, nome)), restored: true, restoredType: "UNARCHIVED" };
+    }
+    if (existing && !existing.ativo) {
+      return { ...(await restoreMarca(existing.id, nome)), restored: true, restoredType: "REACTIVATED" };
+    }
+    if (existing) throw new AppError("Já existe uma marca ativa com este nome.", 409);
+    return { ...(await createMarca({ ...data, nome })), created: true, restored: false };
   },
   async update(id: number, data: MarcaUpdateInput) {
-    if (data.nome && await findMarcaByNome(data.nome, id)) throw new AppError("Ja existe uma marca com este nome.", 409);
-    const marca = await updateMarca(id, data);
+    const payload = data.nome ? { ...data, nome: normalizeName(data.nome) } : data;
+    if (payload.nome && await findMarcaByNome(payload.nome, id)) throw new AppError("Ja existe uma marca com este nome.", 409);
+    const marca = await updateMarca(id, payload);
     if (!marca) throw new AppError("Marca nao encontrada.", 404);
     return marca;
   },
@@ -34,5 +45,10 @@ export const marcasService = {
       });
     }
     await archiveMarca(id);
+  },
+  async restore(id: number) {
+    const marca = await findMarcaByIdIncludingArchived(id);
+    if (!marca) throw new AppError("Marca nao encontrada.", 404);
+    return { ...(await restoreMarca(id)), restored: true, restoredType: marca.excluido_em ? "UNARCHIVED" : "REACTIVATED" };
   }
 };

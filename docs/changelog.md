@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-04-29 - Cadastros inteligentes e precos promocionais
+
+### Adicionado
+
+- Cadastro inteligente de marcas e categorias por nome normalizado.
+- Reativacao automatica de marca/categoria inativa ao cadastrar o mesmo nome.
+- Restauracao automatica de marca/categoria arquivada ao cadastrar o mesmo nome.
+- Filtros em Cadastros: `Ativos`, `Inativos`, `Arquivados` e `Todos`.
+- Botao `Restaurar` para marcas/categorias arquivadas.
+- Cadastro inteligente de produtos por `codigo`, bloqueando duplicidade ativa.
+- Restauracao de produto arquivado ao cadastrar o mesmo codigo, atualizando os dados enviados.
+- Ajuste automatico de estoque ao restaurar produto arquivado com estoque inicial diferente do saldo calculado.
+- Campos promocionais no produto: custo/venda promocional, promocao ativa, periodo e observacao.
+- Campos em `estoque_movimentos`: `custo_unitario` e `compra_promocional`.
+- Campo de custo unitario e checkbox de compra promocional no modal de entrada de estoque.
+
+### Alterado
+
+- Listagem de Produtos ganhou filtro `Ativos`, `Arquivados` e `Todos`.
+- Produto arquivado mostra badge `Arquivado` e acao `Restaurar`.
+- Produto em promocao mostra badge `Promocao` e preco promocional de venda na tabela.
+- `POST /estoque/movimentos` aceita custo de entrada, mas ignora custo em saidas.
+- `/dev/routes` e Swagger foram atualizados com rotas de restauracao e campos promocionais.
+
+### Regras de negocio reforcadas
+
+- Marcas/categorias ativas duplicadas continuam bloqueadas.
+- Marcas/categorias inativas ou arquivadas nao geram nova linha; sao reativadas/restauradas.
+- Produto comprado ou vendido em promocao continua sendo o mesmo cadastro.
+- Custo unitario por entrada preserva historico de compras sem alterar o preco padrao do produto.
+
 ## 2026-04-29 - Dashboard, arquivamento de produto e estoque ativo
 
 ### Corrigido

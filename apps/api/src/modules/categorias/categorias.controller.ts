@@ -1,10 +1,18 @@
 import type { RequestHandler } from "express";
 import { categoriasService } from "./categorias.service.js";
 
-export const listCategoriasController: RequestHandler = async (_request, response, next) => {
+export const listCategoriasController: RequestHandler = async (request, response, next) => {
   try {
-    const categorias = await categoriasService.list();
+    const categorias = await categoriasService.list(request.query.status as "ativos" | "inativos" | "arquivados" | "todos" | undefined);
     response.json(categorias);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restoreCategoriaController: RequestHandler = async (request, response, next) => {
+  try {
+    response.json(await categoriasService.restore(Number(request.params.id)));
   } catch (error) {
     next(error);
   }

@@ -20,6 +20,8 @@ export interface EstoqueMovimento extends RowDataPacket {
   produto_id: number;
   tipo: string;
   quantidade: number;
+  custo_unitario: number | null;
+  compra_promocional: boolean;
   observacao: string | null;
   criado_em: Date;
 }
@@ -36,8 +38,15 @@ export async function listEstoque() {
 export async function createEstoqueMovimento(data: EstoqueMovimentoInput) {
   // Reposicao e ajuste sempre entram como movimento; o saldo disponivel continua derivado da view.
   const [result] = await pool.execute<ResultSetHeader>(
-    "INSERT INTO estoque_movimentos (produto_id, tipo, quantidade, observacao) VALUES (?, ?, ?, ?)",
-    [data.produto_id, data.tipo, data.quantidade, data.observacao || null]
+    "INSERT INTO estoque_movimentos (produto_id, tipo, quantidade, custo_unitario, compra_promocional, observacao) VALUES (?, ?, ?, ?, ?, ?)",
+    [
+      data.produto_id,
+      data.tipo,
+      data.quantidade,
+      data.tipo === "ENTRADA" || data.tipo === "AJUSTE_ENTRADA" ? data.custo_unitario ?? null : null,
+      data.tipo === "ENTRADA" || data.tipo === "AJUSTE_ENTRADA" ? data.compra_promocional : false,
+      data.observacao || null
+    ]
   );
   return findEstoqueMovimentoById(result.insertId);
 }

@@ -9,8 +9,9 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Table, TableWrap } from "../../components/ui/Table";
-import { archiveCategoria, createCategoria, getCategorias, updateCategoria, updateCategoriaStatus } from "../../features/categorias/services/categoriasService";
-import { archiveMarca, createMarca, getMarcas, updateMarca, updateMarcaStatus } from "../../features/marcas/services/marcasService";
+import { archiveCategoria, createCategoria, getCategorias, restoreCategoria, updateCategoria, updateCategoriaStatus } from "../../features/categorias/services/categoriasService";
+import { archiveMarca, createMarca, getMarcas, restoreMarca, updateMarca, updateMarcaStatus } from "../../features/marcas/services/marcasService";
+import type { CadastroCreateResponse, CadastroStatusFilter } from "../../features/marcas/services/marcasService";
 import type { Categoria } from "../../types/categoria";
 import type { Marca } from "../../types/marca";
 
@@ -27,16 +28,17 @@ export function CadastrosPage() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<CadastroStatusFilter>("todos");
 
   async function load() {
     setLoading(true);
-    const [marcasData, categoriasData] = await Promise.all([getMarcas(), getCategorias()]);
+    const [marcasData, categoriasData] = await Promise.all([getMarcas(status), getCategorias(status)]);
     setMarcas(marcasData);
     setCategorias(categoriasData);
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [status]);
 
   return (
     <>
@@ -44,6 +46,13 @@ export function CadastrosPage() {
       <div className="mb-5 flex gap-2">
         <Button variant={tab === "marcas" ? "primary" : "secondary"} onClick={() => setTab("marcas")}>Marcas</Button>
         <Button variant={tab === "categorias" ? "primary" : "secondary"} onClick={() => setTab("categorias")}>Categorias</Button>
+      </div>
+      <div className="mb-5 flex flex-wrap gap-2">
+        {(["ativos", "inativos", "arquivados", "todos"] as const).map((item) => (
+          <Button key={item} type="button" variant={status === item ? "primary" : "secondary"} onClick={() => setStatus(item)}>
+            {item === "ativos" ? "Ativos" : item === "inativos" ? "Inativos" : item === "arquivados" ? "Arquivados" : "Todos"}
+          </Button>
+        ))}
       </div>
       {loading ? <Loading /> : tab === "marcas" ? (
         <CadastroManager
@@ -54,6 +63,7 @@ export function CadastrosPage() {
           onUpdate={(id, nome) => updateMarca(id, { nome })}
           onStatus={updateMarcaStatus}
           onArchive={archiveMarca}
+          onRestore={restoreMarca}
           onReload={load}
         />
       ) : (
@@ -65,6 +75,7 @@ export function CadastrosPage() {
           onUpdate={(id, nome) => updateCategoria(id, { nome })}
           onStatus={updateCategoriaStatus}
           onArchive={archiveCategoria}
+          onRestore={restoreCategoria}
           onReload={load}
         />
       )}
@@ -80,15 +91,17 @@ function CadastroManager({
   onUpdate,
   onStatus,
   onArchive,
+  onRestore,
   onReload
 }: {
   title: string;
   itemLabel: string;
   items: CadastroItem[];
-  onCreate: (nome: string) => Promise<unknown>;
+  onCreate: (nome: string) => Promise<CadastroCreateResponse<CadastroItem>>;
   onUpdate: (id: number, nome: string) => Promise<unknown>;
   onStatus: (id: number, ativo: boolean) => Promise<unknown>;
   onArchive: (id: number) => Promise<unknown>;
+  onRestore: (id: number) => Promise<CadastroCreateResponse<CadastroItem>>;
   onReload: () => Promise<void>;
 }) {
   const [nome, setNome] = useState("");
@@ -104,8 +117,9 @@ function CadastroManager({
     setSuccess("");
     setLoading(true);
     try {
-      await action();
-      setSuccess(message);
+      const result = await action();
+      const restoredType = typeof result === "object" && result !== null && "restoredType" in result ? (result as { restoredType?: string }).restoredType : undefined;
+      setSuccess(restoredType === "UNARCHIVED" ? `${capitalize(itemLabel)} arquivada restaurada com sucesso.` : restoredType === "REACTIVATED" ? `${capitalize(itemLabel)} existente reativada com sucesso.` : message);
       setNome("");
       setEditing(null);
       await onReload();
@@ -142,6 +156,10 @@ function CadastroManager({
     // Arquivar e soft delete: some da listagem normal, mas permanece no banco para historico.
     if (!window.confirm(`Arquivar ${itemLabel} "${item.nome}"?`)) return;
     await run(() => onArchive(item.id), "Cadastro arquivado.");
+  }
+
+  async function restoreItem(item: CadastroItem) {
+    await run(() => onRestore(item.id), "Cadastro restaurado.");
   }
 
   return (
@@ -184,13 +202,21 @@ function CadastroManager({
               {items.map((item) => (
                 <tr key={item.id} className="text-slate-200">
                   <td className="px-4 py-3 font-medium text-white">{item.nome}</td>
-                  <td className="px-4 py-3"><Badge status={item.ativo ? "OK" : "DEFAULT"}>{item.ativo ? "Ativo" : "Inativo"}</Badge></td>
+                  <td className="px-4 py-3">
+                    {item.excluido_em ? <Badge status="DEFAULT">Arquivado</Badge> : <Badge status={item.ativo ? "OK" : "DEFAULT"}>{item.ativo ? "Ativo" : "Inativo"}</Badge>}
+                  </td>
                   <td className="px-4 py-3 text-slate-400">{new Date(item.criado_em).toLocaleDateString("pt-BR")}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <Button variant="secondary" className="h-9 px-3" onClick={() => startEdit(item)} iconLeft={<Edit className="h-4 w-4" />}>Editar</Button>
-                      <Button variant={item.ativo ? "ghost" : "success"} className="h-9 px-3" onClick={() => run(() => onStatus(item.id, !item.ativo), item.ativo ? "Cadastro desativado." : "Cadastro reativado.")} iconLeft={item.ativo ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}>{item.ativo ? "Desativar" : "Reativar"}</Button>
-                      <Button variant="danger" className="h-9 px-3" onClick={() => archiveItem(item)} iconLeft={item.ativo ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}>Arquivar</Button>
+                      {item.excluido_em ? (
+                        <Button variant="success" className="h-9 px-3" onClick={() => restoreItem(item)} iconLeft={<RotateCcw className="h-4 w-4" />}>Restaurar</Button>
+                      ) : (
+                        <>
+                          <Button variant="secondary" className="h-9 px-3" onClick={() => startEdit(item)} iconLeft={<Edit className="h-4 w-4" />}>Editar</Button>
+                          <Button variant={item.ativo ? "ghost" : "success"} className="h-9 px-3" onClick={() => run(() => onStatus(item.id, !item.ativo), item.ativo ? "Cadastro desativado." : "Cadastro reativado.")} iconLeft={item.ativo ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}>{item.ativo ? "Desativar" : "Reativar"}</Button>
+                          <Button variant="danger" className="h-9 px-3" onClick={() => archiveItem(item)} iconLeft={<Archive className="h-4 w-4" />}>Arquivar</Button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -201,4 +227,8 @@ function CadastroManager({
       </Card>
     </div>
   );
+}
+
+function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

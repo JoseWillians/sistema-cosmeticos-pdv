@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS estoque_movimentos (
   produto_id INT NOT NULL,
   tipo ENUM('ENTRADA', 'SAIDA', 'AJUSTE_ENTRADA', 'AJUSTE_SAIDA') NOT NULL,
   quantidade DECIMAL(10,3) NOT NULL,
+  custo_unitario DECIMAL(10,2) NULL,
+  compra_promocional BOOLEAN NOT NULL DEFAULT FALSE,
   observacao VARCHAR(255) NULL,
   criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_estoque_produto_id (produto_id),

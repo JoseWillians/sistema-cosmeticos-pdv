@@ -5,6 +5,7 @@ export interface ProdutoFilters {
   busca?: string;
   marca_id?: string;
   categoria_id?: string;
+  status?: "ativos" | "arquivados" | "todos";
 }
 
 export async function getProdutos(filters: ProdutoFilters = {}) {
@@ -30,4 +31,9 @@ export async function updateProduto(id: string, payload: Partial<ProdutoPayload>
 
 export async function deleteProduto(id: number) {
   await api.delete(`/produtos/${id}`);
+}
+
+export async function restoreProduto(id: number) {
+  const { data } = await api.patch<Produto>(`/produtos/${id}/restore`);
+  return data;
 }

@@ -1,13 +1,16 @@
 import { api } from "../../../lib/api";
 import type { Marca } from "../../../types/marca";
 
-export async function getMarcas() {
-  const { data } = await api.get<Marca[]>("/marcas");
+export type CadastroStatusFilter = "ativos" | "inativos" | "arquivados" | "todos";
+export type CadastroCreateResponse<T> = T & { restored?: boolean; restoredType?: "REACTIVATED" | "UNARCHIVED"; created?: boolean };
+
+export async function getMarcas(status?: CadastroStatusFilter) {
+  const { data } = await api.get<Marca[]>("/marcas", { params: status ? { status } : undefined });
   return data;
 }
 
 export async function createMarca(payload: { nome: string }) {
-  const { data } = await api.post<Marca>("/marcas", payload);
+  const { data } = await api.post<CadastroCreateResponse<Marca>>("/marcas", payload);
   return data;
 }
 
@@ -23,4 +26,9 @@ export async function updateMarcaStatus(id: number, ativo: boolean) {
 
 export async function archiveMarca(id: number) {
   await api.delete(`/marcas/${id}`);
+}
+
+export async function restoreMarca(id: number) {
+  const { data } = await api.patch<CadastroCreateResponse<Marca>>(`/marcas/${id}/restore`);
+  return data;
 }

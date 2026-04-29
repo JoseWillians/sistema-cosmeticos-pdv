@@ -11,9 +11,11 @@ import type { Produto, ProdutoPayload, UnidadeProduto } from "../../../types/pro
 import { ErrorMessage } from "../../../components/feedback/ErrorMessage";
 import { parseCurrencyInput } from "../../../lib/parseCurrencyInput";
 
-type ProdutoFormState = Omit<ProdutoPayload, "preco_custo" | "preco_venda"> & {
+type ProdutoFormState = Omit<ProdutoPayload, "preco_custo" | "preco_venda" | "preco_custo_promocional" | "preco_venda_promocional"> & {
   preco_custo: string | number;
   preco_venda: string | number;
+  preco_custo_promocional?: string | number;
+  preco_venda_promocional?: string | number;
 };
 
 const initial: ProdutoFormState = {
@@ -24,6 +26,12 @@ const initial: ProdutoFormState = {
   unidade: "UN",
   preco_custo: 0,
   preco_venda: 0,
+  preco_custo_promocional: "",
+  preco_venda_promocional: "",
+  promocao_ativa: false,
+  promocao_inicio: "",
+  promocao_fim: "",
+  promocao_observacao: "",
   estoque_inicial: 0,
   estoque_minimo: 0,
   controlar_estoque: true,
@@ -48,8 +56,8 @@ export function ProdutoForm({
   const [form, setForm] = useState<ProdutoFormState>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const marcasDisponiveis = marcas.filter((marca) => marca.ativo || marca.id === produto?.marca_id);
-  const categoriasDisponiveis = categorias.filter((categoria) => categoria.ativo || categoria.id === produto?.categoria_id);
+  const marcasDisponiveis = marcas.filter((marca) => (!marca.excluido_em && marca.ativo) || marca.id === produto?.marca_id);
+  const categoriasDisponiveis = categorias.filter((categoria) => (!categoria.excluido_em && categoria.ativo) || categoria.id === produto?.categoria_id);
 
   useEffect(() => {
     if (produto) {
@@ -61,6 +69,12 @@ export function ProdutoForm({
         unidade: produto.unidade,
         preco_custo: produto.preco_custo,
         preco_venda: produto.preco_venda,
+        preco_custo_promocional: produto.preco_custo_promocional ?? "",
+        preco_venda_promocional: produto.preco_venda_promocional ?? "",
+        promocao_ativa: Boolean(produto.promocao_ativa),
+        promocao_inicio: produto.promocao_inicio?.slice(0, 10) ?? "",
+        promocao_fim: produto.promocao_fim?.slice(0, 10) ?? "",
+        promocao_observacao: produto.promocao_observacao ?? "",
         estoque_minimo: produto.estoque_minimo,
         controlar_estoque: produto.controlar_estoque,
         codigo_barras: produto.codigo_barras ?? "",
@@ -81,10 +95,18 @@ export function ProdutoForm({
     setLoading(true);
     try {
       // Moeda e estoque sao normalizados antes do POST/PUT para a API receber tipos previsiveis.
+      const precoCustoPromocional = form.preco_custo_promocional === "" || form.preco_custo_promocional === undefined ? null : parseCurrencyInput(form.preco_custo_promocional);
+      const precoVendaPromocional = form.preco_venda_promocional === "" || form.preco_venda_promocional === undefined ? null : parseCurrencyInput(form.preco_venda_promocional);
       await onSubmit({
         ...form,
         preco_custo: parseCurrencyInput(form.preco_custo),
         preco_venda: parseCurrencyInput(form.preco_venda),
+        preco_custo_promocional: precoCustoPromocional,
+        preco_venda_promocional: precoVendaPromocional,
+        promocao_ativa: Boolean(form.promocao_ativa),
+        promocao_inicio: form.promocao_inicio || null,
+        promocao_fim: form.promocao_fim || null,
+        promocao_observacao: form.promocao_observacao || null,
         marca_id: Number(form.marca_id),
         categoria_id: Number(form.categoria_id),
         controlar_estoque: Boolean(form.controlar_estoque),
@@ -96,7 +118,10 @@ export function ProdutoForm({
         ? (error as { response?: { data?: unknown } }).response?.data
         : undefined;
       console.error("Erro ao salvar produto", responseData ?? error);
-      setError(responseData ? "A API recusou os dados enviados. Confira preco, unidade, marca, categoria e estoque." : "Nao foi possivel salvar o produto. Confira os campos e tente novamente.");
+      const apiMessage = typeof responseData === "object" && responseData !== null && "message" in responseData
+        ? String((responseData as { message?: string }).message)
+        : "";
+      setError(apiMessage || (responseData ? "A API recusou os dados enviados. Confira preco, unidade, marca, categoria e estoque." : "Nao foi possivel salvar o produto. Confira os campos e tente novamente."));
     } finally {
       setLoading(false);
     }
@@ -137,6 +162,25 @@ export function ProdutoForm({
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="Descricao" value={form.descricao ?? ""} onChange={(e) => setField("descricao", e.target.value)} />
           <Input label="Observacoes" value={form.observacoes ?? ""} onChange={(e) => setField("observacoes", e.target.value)} />
+        </div>
+        <div className="rounded-lg border border-white/10 bg-slate-950/25 p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-white">Precos promocionais (opcional)</h2>
+              <p className="mt-1 text-xs text-slate-400">Promocao nao duplica produto nem substitui os precos padrao.</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input type="checkbox" checked={Boolean(form.promocao_ativa)} onChange={(e) => setField("promocao_ativa", e.target.checked)} />
+              Promocao ativa?
+            </label>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Input label="Preco de custo promocional" inputMode="decimal" value={form.preco_custo_promocional ?? ""} onChange={(e) => setField("preco_custo_promocional", e.target.value)} />
+            <Input label="Preco de venda promocional" inputMode="decimal" value={form.preco_venda_promocional ?? ""} onChange={(e) => setField("preco_venda_promocional", e.target.value)} />
+            <Input label="Inicio da promocao" type="date" value={form.promocao_inicio ?? ""} onChange={(e) => setField("promocao_inicio", e.target.value)} />
+            <Input label="Fim da promocao" type="date" value={form.promocao_fim ?? ""} onChange={(e) => setField("promocao_fim", e.target.value)} />
+            <Input label="Observacao da promocao" value={form.promocao_observacao ?? ""} onChange={(e) => setField("promocao_observacao", e.target.value)} />
+          </div>
         </div>
         <div className="flex justify-end">
           {/* Cancelar evita que o usuario fique preso na tela de edicao quando decide nao salvar. */}

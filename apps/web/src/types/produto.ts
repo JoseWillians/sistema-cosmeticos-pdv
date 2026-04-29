@@ -20,6 +20,12 @@ export interface Produto {
   unidade: UnidadeProduto;
   preco_custo: number;
   preco_venda: number;
+  preco_custo_promocional?: number | null;
+  preco_venda_promocional?: number | null;
+  promocao_ativa?: boolean;
+  promocao_inicio?: string | null;
+  promocao_fim?: string | null;
+  promocao_observacao?: string | null;
   estoque_minimo: number;
   controlar_estoque: boolean;
   descricao: string | null;
@@ -31,6 +37,9 @@ export interface Produto {
   categoria_ativo?: boolean;
   estoque_disponivel: number;
   status_estoque: StatusEstoque;
+  excluido_em?: string | null;
+  restored?: boolean;
+  created?: boolean;
 }
 
 export interface ProdutoPayload {
@@ -42,6 +51,12 @@ export interface ProdutoPayload {
   unidade: UnidadeProduto;
   preco_custo: number;
   preco_venda: number;
+  preco_custo_promocional?: number | null;
+  preco_venda_promocional?: number | null;
+  promocao_ativa?: boolean;
+  promocao_inicio?: string | null;
+  promocao_fim?: string | null;
+  promocao_observacao?: string | null;
   estoque_minimo?: number;
   controlar_estoque?: boolean;
   estoque_inicial?: number;

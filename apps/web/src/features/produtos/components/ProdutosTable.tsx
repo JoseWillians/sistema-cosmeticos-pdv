@@ -1,4 +1,4 @@
-import { Archive, Edit, PackagePlus } from "lucide-react";
+import { Archive, Edit, PackagePlus, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
@@ -8,7 +8,7 @@ import { formatNumber } from "../../../lib/formatters";
 import { unidadeProdutoLabels } from "../../../types/produto";
 import type { Produto } from "../../../types/produto";
 
-export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: Produto[]; onDelete: (produto: Produto) => void; onMovimentar: (produto: Produto) => void }) {
+export function ProdutosTable({ produtos, onDelete, onMovimentar, onRestore }: { produtos: Produto[]; onDelete: (produto: Produto) => void; onMovimentar: (produto: Produto) => void; onRestore?: (produto: Produto) => void }) {
   // A tabela mostra os campos operacionais que o balconista precisa comparar rapidamente.
   return (
     <TableWrap>
@@ -24,19 +24,34 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: 
           {produtos.map((produto) => (
             <tr key={produto.id} className="border-t border-white/10 text-slate-200">
               <td className="px-4 py-3 font-mono text-xs text-cyan-200">{produto.codigo}</td>
-              <td className="px-4 py-3 font-medium text-white">{produto.nome}</td>
+              <td className="px-4 py-3 font-medium text-white">
+                <div className="flex flex-wrap items-center gap-2">
+                  {produto.nome}
+                  {produto.promocao_ativa && <Badge status="BAIXO">Promocao</Badge>}
+                  {produto.excluido_em && <Badge status="DEFAULT">Arquivado</Badge>}
+                </div>
+              </td>
               <td className="px-4 py-3">{unidadeProdutoLabels[produto.unidade] ?? produto.unidade}</td>
               <td className="px-4 py-3">{produto.marca} {produto.marca_ativo === false && <Badge status="DEFAULT">Inativa</Badge>}</td>
               <td className="px-4 py-3">{produto.categoria} {produto.categoria_ativo === false && <Badge status="DEFAULT">Inativa</Badge>}</td>
               <td className="px-4 py-3">{formatNumber(produto.estoque_disponivel)}</td>
               <td className="px-4 py-3">{toCurrency(produto.preco_custo)}</td>
-              <td className="px-4 py-3">{toCurrency(produto.preco_venda)}</td>
+              <td className="px-4 py-3">
+                <div>{toCurrency(produto.preco_venda)}</div>
+                {produto.promocao_ativa && produto.preco_venda_promocional != null && (
+                  <div className="text-xs text-emerald-200">Promo: {toCurrency(produto.preco_venda_promocional)}</div>
+                )}
+              </td>
               <td className="px-4 py-3"><Badge status={produto.status_estoque}>{produto.status_estoque}</Badge></td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">
                   <Link to={`/produtos/${produto.id}/editar`}><Button variant="secondary" className="h-9 px-3" icon={<Edit className="h-4 w-4" />} /></Link>
-                  <Button variant="success" className="h-9 px-3" onClick={() => onMovimentar(produto)} iconLeft={<PackagePlus className="h-4 w-4" />} />
-                  <Button variant="danger" className="h-9 px-3" title="Arquivar produto" onClick={() => onDelete(produto)} iconLeft={<Archive className="h-4 w-4" />} />
+                  {!produto.excluido_em && <Button variant="success" className="h-9 px-3" onClick={() => onMovimentar(produto)} iconLeft={<PackagePlus className="h-4 w-4" />} />}
+                  {produto.excluido_em && onRestore ? (
+                    <Button variant="success" className="h-9 px-3" title="Restaurar produto" onClick={() => onRestore(produto)} iconLeft={<RotateCcw className="h-4 w-4" />} />
+                  ) : (
+                    <Button variant="danger" className="h-9 px-3" title="Arquivar produto" onClick={() => onDelete(produto)} iconLeft={<Archive className="h-4 w-4" />} />
+                  )}
                 </div>
               </td>
             </tr>
