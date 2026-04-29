@@ -27,6 +27,7 @@ export interface EstoqueMovimento extends RowDataPacket {
 // O saldo vem da view para evitar duplicar o calculo de entradas e saidas na aplicacao.
 export async function listEstoque() {
   const [rows] = await pool.query<EstoqueProduto[]>(
+    // A view ja filtra produtos arquivados para a listagem representar somente estoque ativo.
     "SELECT * FROM vw_estoque_produtos ORDER BY produto"
   );
   return rows;

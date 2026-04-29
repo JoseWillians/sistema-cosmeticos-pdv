@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Loading } from "../../components/feedback/Loading";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { ProdutoFiltros } from "../../features/produtos/components/ProdutoFiltros";
@@ -26,6 +27,9 @@ export function ProdutosPage() {
   const [categoriaId, setCategoriaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [produtoMovimento, setProdutoMovimento] = useState<Produto | null>(null);
+  const [produtoArquivar, setProdutoArquivar] = useState<Produto | null>(null);
+  const [arquivando, setArquivando] = useState(false);
+  const [archiveError, setArchiveError] = useState("");
 
   async function load() {
     setLoading(true);
@@ -42,9 +46,24 @@ export function ProdutosPage() {
 
   useEffect(() => { load(); }, [busca, marcaId, categoriaId]);
 
-  async function handleDelete(id: number) {
-    await deleteProduto(id);
-    await load();
+  async function handleArchiveConfirm() {
+    if (!produtoArquivar) return;
+    setArquivando(true);
+    setArchiveError("");
+    try {
+      // Arquivar nao apaga definitivamente; o backend preenche excluido_em e preserva estoque_movimentos.
+      await deleteProduto(produtoArquivar.id);
+      setProdutoArquivar(null);
+      await load();
+    } catch (error) {
+      const responseData = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data
+        : undefined;
+      console.error("Erro ao arquivar produto", responseData ?? error);
+      setArchiveError(responseData?.message ?? "Nao foi possivel arquivar o produto.");
+    } finally {
+      setArquivando(false);
+    }
   }
 
   async function handleMovimento(payload: EstoqueMovimentoPayload) {
@@ -58,7 +77,7 @@ export function ProdutosPage() {
       <Card className="mb-5">
         <ProdutoFiltros busca={busca} marcaId={marcaId} categoriaId={categoriaId} marcas={marcas} categorias={categorias} onBusca={setBusca} onMarca={setMarcaId} onCategoria={setCategoriaId} />
       </Card>
-      {loading ? <Loading /> : <ProdutosTable produtos={produtos} onDelete={handleDelete} onMovimentar={setProdutoMovimento} />}
+      {loading ? <Loading /> : <ProdutosTable produtos={produtos} onDelete={setProdutoArquivar} onMovimentar={setProdutoMovimento} />}
       {produtoMovimento && (
         <MovimentoEstoqueModal
           produto={{
@@ -71,6 +90,16 @@ export function ProdutosPage() {
           onSubmit={handleMovimento}
         />
       )}
+      <ConfirmDialog
+        open={!!produtoArquivar}
+        title="Arquivar produto?"
+        message="Este produto sera removido das listagens principais, mas continuara salvo no banco para historico. As movimentacoes de estoque antigas serao preservadas."
+        confirmLabel="Arquivar produto"
+        loading={arquivando}
+        error={archiveError}
+        onCancel={() => { setProdutoArquivar(null); setArchiveError(""); }}
+        onConfirm={handleArchiveConfirm}
+      />
     </>
   );
 }

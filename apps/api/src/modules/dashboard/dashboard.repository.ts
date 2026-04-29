@@ -52,11 +52,13 @@ export const dashboardRepository = {
 
   async getEntradasPorPeriodo() {
     const [rows] = await pool.query<AnyRow[]>(`
-      SELECT DATE_FORMAT(criado_em, '%Y-%m') AS periodo, COALESCE(SUM(quantidade), 0) AS quantidade
+      SELECT DATE_FORMAT(estoque_movimentos.criado_em, '%Y-%m') AS periodo, COALESCE(SUM(estoque_movimentos.quantidade), 0) AS quantidade
       FROM estoque_movimentos
-      WHERE tipo IN ('ENTRADA', 'AJUSTE_ENTRADA')
-        AND criado_em >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-      GROUP BY DATE_FORMAT(criado_em, '%Y-%m')
+      INNER JOIN produtos p ON p.id = estoque_movimentos.produto_id
+      WHERE estoque_movimentos.tipo IN ('ENTRADA', 'AJUSTE_ENTRADA')
+        AND p.excluido_em IS NULL
+        AND estoque_movimentos.criado_em >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+      GROUP BY DATE_FORMAT(estoque_movimentos.criado_em, '%Y-%m')
       ORDER BY periodo
     `);
     return rows;

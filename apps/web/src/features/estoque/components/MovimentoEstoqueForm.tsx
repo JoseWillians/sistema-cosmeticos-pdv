@@ -30,11 +30,11 @@ export function MovimentoEstoqueModal({
   onSubmit: (payload: EstoqueMovimentoPayload) => Promise<void>;
 }) {
   const [tipo, setTipo] = useState<TipoMovimentoEstoque>("ENTRADA");
-  const [quantidade, setQuantidade] = useState(1);
+  const [quantidade, setQuantidade] = useState("1");
   const [observacao, setObservacao] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const quantidadeMovimentar = Math.trunc(Number(quantidade || 0));
+  const quantidadeMovimentar = Number(quantidade || 0);
   const movimentoSoma = tipo === "ENTRADA" || tipo === "AJUSTE_ENTRADA";
   const estoqueFinalPrevisto = movimentoSoma
     ? Number(produto.estoque_disponivel) + quantidadeMovimentar
@@ -44,20 +44,30 @@ export function MovimentoEstoqueModal({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setFeedback(null);
+    const quantidadeInteira = Number(quantidade);
+    if (!Number.isInteger(quantidadeInteira) || quantidadeInteira <= 0) {
+      setFeedback({ type: "error", message: "Informe uma quantidade inteira maior que zero." });
+      return;
+    }
     setLoading(true);
     try {
-      // Observacao deste modal documenta o movimento, sem alterar a observacao cadastral do produto.
-      await onSubmit({
-        produto_id: produto.produto_id,
+      const payload: EstoqueMovimentoPayload = {
+        produto_id: Number(produto.produto_id),
         tipo,
-        quantidade: Math.trunc(Number(quantidade)),
-        observacao: observacao || null
-      });
+        quantidade: quantidadeInteira,
+        observacao: observacao.trim() || undefined
+      };
+      // Observacao deste modal documenta o movimento, sem alterar a observacao cadastral do produto.
+      if (import.meta.env.DEV) console.log("Payload de movimentacao de estoque", payload);
+      await onSubmit(payload);
       setFeedback({ type: "success", message: "Movimento registrado com sucesso." });
       window.setTimeout(onClose, 700);
     } catch (error) {
-      console.error("Erro ao movimentar estoque", error);
-      setFeedback({ type: "error", message: "Nao foi possivel registrar o movimento." });
+      const responseData = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data
+        : undefined;
+      console.error("Erro ao movimentar estoque", responseData ?? error);
+      setFeedback({ type: "error", message: responseData?.message ?? "Nao foi possivel registrar o movimento." });
     } finally {
       setLoading(false);
     }
@@ -89,7 +99,7 @@ export function MovimentoEstoqueModal({
           <Select label="Tipo de movimento" value={tipo} onChange={(event) => setTipo(event.target.value as TipoMovimentoEstoque)}>
             {tipos.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </Select>
-          <Input label="Quantidade a movimentar" type="number" min="1" step="1" value={quantidade} onChange={(event) => setQuantidade(Math.trunc(Number(event.target.value)))} required />
+          <Input label="Quantidade a movimentar" type="number" min="1" step="1" value={quantidade} onChange={(event) => setQuantidade(event.target.value)} required />
           {estoqueNegativo && (
             <div className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
               Este movimento deixara o estoque abaixo de zero. Confira a quantidade antes de salvar.

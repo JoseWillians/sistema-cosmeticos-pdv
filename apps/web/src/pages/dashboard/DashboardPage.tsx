@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Boxes, CircleDollarSign, Package, PackageCheck, PackageX, TrendingDown } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Boxes, CircleDollarSign, Clock3, Package, PackageCheck, PackageX, Sparkles, TrendingDown } from "lucide-react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { Loading } from "../../components/feedback/Loading";
@@ -11,6 +11,7 @@ import { formatNumber } from "../../lib/formatters";
 import { getDashboardResumo, type DashboardResumo } from "../../features/dashboard/services/dashboardService";
 
 const colors = ["#38bdf8", "#ec4899", "#8b5cf6", "#34d399", "#f59e0b", "#f43f5e"];
+const tooltipStyle = { background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#e2e8f0" };
 
 export function DashboardPage() {
   const [data, setData] = useState<DashboardResumo | null>(null);
@@ -23,74 +24,103 @@ export function DashboardPage() {
   if (loading) return <Loading />;
   if (!data) return null;
 
+  const hasProdutosAtivos = data.kpis.totalProdutos > 0;
   const cards = [
-    { label: "Total de produtos", value: data.kpis.totalProdutos, icon: Package, tone: "text-cyan-200" },
-    { label: "Em estoque", value: data.kpis.produtosEmEstoque, icon: PackageCheck, tone: "text-emerald-200" },
-    { label: "Estoque baixo", value: data.kpis.estoqueBaixo, icon: TrendingDown, tone: "text-amber-200" },
-    { label: "Esgotados", value: data.kpis.esgotados, icon: PackageX, tone: "text-rose-200" },
-    { label: "Valor custo", value: toCurrency(data.kpis.valorEstoqueCusto), icon: Boxes, tone: "text-violet-200" },
-    { label: "Valor venda", value: toCurrency(data.kpis.valorEstoqueVenda), icon: CircleDollarSign, tone: "text-pink-200" }
+    { label: "Produtos ativos", helper: "Listagem principal", value: data.kpis.totalProdutos, icon: Package, tone: "from-cyan-400/20 to-blue-500/10", badge: "Atual" },
+    { label: "Em estoque", helper: "Saldo acima de zero", value: data.kpis.produtosEmEstoque, icon: PackageCheck, tone: "from-emerald-400/20 to-cyan-500/10", badge: "OK" },
+    { label: "Estoque baixo", helper: "Abaixo ou no minimo", value: data.kpis.estoqueBaixo, icon: TrendingDown, tone: "from-amber-400/20 to-orange-500/10", badge: "Atencao" },
+    { label: "Esgotados", helper: "Saldo zerado ou negativo", value: data.kpis.esgotados, icon: PackageX, tone: "from-rose-400/20 to-pink-500/10", badge: "Critico" },
+    { label: "Valor custo", helper: "Estimativa do saldo ativo", value: toCurrency(data.kpis.valorEstoqueCusto), icon: Boxes, tone: "from-violet-400/20 to-fuchsia-500/10", badge: "Custo" },
+    { label: "Valor venda", helper: "Potencial bruto em estoque", value: toCurrency(data.kpis.valorEstoqueVenda), icon: CircleDollarSign, tone: "from-pink-400/20 to-cyan-500/10", badge: "Venda" }
   ];
 
-  const futuros = ["Clientes", "Vendas", "Caixa", "Resumo", "Financeiro", "Relatórios avançados"];
+  const futuros = ["Clientes", "Vendas", "Caixa", "Resumo", "Financeiro"];
 
   return (
     <>
-      <PageHeader title="Inicio" description="Dashboard atual focado em produtos, estoque e movimentacoes." />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <PageHeader title="Inicio" description="Produtos, estoque e movimentacoes em uma visao operacional." />
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-6">
         {cards.map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.label}>
-              <Icon className={`mb-4 h-6 w-6 ${item.tone}`} />
-              <p className="text-sm text-slate-400">{item.label}</p>
-              <strong className="mt-2 block text-2xl text-white">{item.value}</strong>
+            <Card key={item.label} className={`relative overflow-hidden bg-gradient-to-br ${item.tone}`}>
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-lg bg-slate-950/35 ring-1 ring-white/10">
+                  <Icon className="h-6 w-6 text-white" />
+                </div>
+                <Badge status="DEFAULT">{item.badge}</Badge>
+              </div>
+              <p className="relative mt-5 text-sm text-slate-300">{item.label}</p>
+              <strong className="relative mt-2 block text-2xl text-white">{item.value}</strong>
+              <p className="relative mt-2 text-xs text-slate-400">{item.helper}</p>
             </Card>
           );
         })}
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-3">
+      {!hasProdutosAtivos && (
+        <Card className="mt-5 border-cyan-300/15 bg-cyan-500/10">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-cyan-400/15 text-cyan-100">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-bold text-white">Nenhum produto ativo no momento.</h2>
+              <p className="mt-1 text-sm text-slate-300">Cadastre produtos ou revise arquivamentos para alimentar graficos, estoque critico e valores estimados.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-3">
         <ChartCard title="Produtos por categoria">
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie data={data.produtosPorCategoria} dataKey="quantidade" nameKey="nome" innerRadius={58} outerRadius={92} paddingAngle={4}>
-                {data.produtosPorCategoria.map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          {data.produtosPorCategoria.length ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={data.produtosPorCategoria} dataKey="quantidade" nameKey="nome" innerRadius={64} outerRadius={104} paddingAngle={4}>
+                  {data.produtosPorCategoria.map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend wrapperStyle={{ color: "#cbd5e1", fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : <DashboardEmptyState />}
         </ChartCard>
 
         <ChartCard title="Produtos por marca">
-          <ResponsiveContainer width="100%" height={260}>
+          {data.produtosPorMarca.length ? (
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.produtosPorMarca} layout="vertical" margin={{ left: 10, right: 20 }}>
               <CartesianGrid stroke="#334155" strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" stroke="#94a3b8" />
               <YAxis dataKey="nome" type="category" stroke="#94a3b8" width={90} />
-              <Tooltip />
+              <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="quantidade" fill="#8b5cf6" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
+          ) : <DashboardEmptyState />}
         </ChartCard>
 
         <ChartCard title="Status do estoque">
-          <ResponsiveContainer width="100%" height={260}>
+          {data.statusEstoque.length ? (
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.statusEstoque}>
               <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="status" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
-              <Tooltip />
+              <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="quantidade" fill="#34d399" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+          ) : <DashboardEmptyState />}
         </ChartCard>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_1fr]">
+      <div className="mt-6 grid gap-5 xl:grid-cols-[1.35fr_0.9fr]">
         <ChartCard title="Entradas de estoque por periodo">
           {data.entradasPorPeriodo.length ? (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={data.entradasPorPeriodo}>
                 <defs>
                   <linearGradient id="entradaGradient" x1="0" x2="0" y1="0" y2="1">
@@ -101,23 +131,34 @@ export function DashboardPage() {
                 <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="periodo" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" />
-                <Tooltip />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="quantidade" stroke="#38bdf8" fill="url(#entradaGradient)" />
               </AreaChart>
             </ResponsiveContainer>
-          ) : <p className="text-sm text-slate-400">Sem movimentacoes suficientes para o periodo.</p>}
+          ) : <DashboardEmptyState title="Ainda nao ha movimentacoes suficientes para este grafico." />}
         </ChartCard>
 
-        <Card>
-          <h2 className="mb-3 text-lg font-bold text-white">Leitura rápida</h2>
-          <p className="text-sm leading-6 text-slate-400">
-            Os indicadores atuais usam apenas produtos, estoque e movimentacoes. Clientes, vendas e caixa aparecem como proximos modulos, mas ainda nao alimentam estes números.
-          </p>
+        <Card className="bg-gradient-to-br from-white/[0.08] to-cyan-500/[0.07]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-cyan-400/15 text-cyan-100">
+              <Clock3 className="h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-bold text-white">Leitura rapida</h2>
+          </div>
+          <div className="grid gap-3 text-sm leading-6 text-slate-300">
+            <p>O dashboard considera apenas produtos ativos. Produtos arquivados somem dos KPIs e do estoque ativo, mas continuam preservados no banco.</p>
+            <p>Estoque baixo significa saldo maior que zero e menor ou igual ao minimo configurado. Esgotado indica saldo zerado ou negativo.</p>
+            <p>Clientes, vendas e caixa ainda nao alimentam estes numeros; eles aparecem como proximas areas do sistema.</p>
+          </div>
         </Card>
       </div>
 
-      <Card className="mt-5">
-        <h2 className="mb-4 text-lg font-bold text-white">Produtos com menor estoque</h2>
+      <div className="mt-6 grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
+      <Card>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-white">Produtos com menor estoque</h2>
+          <Badge status={data.produtosCriticos.length ? "BAIXO" : "OK"}>{data.produtosCriticos.length ? "Atencao" : "Estavel"}</Badge>
+        </div>
         <div className="overflow-auto">
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase text-slate-400">
@@ -135,20 +176,24 @@ export function DashboardPage() {
                   <td><Badge status={item.status === "ESGOTADO" ? "ESGOTADO" : "BAIXO"}>{item.status}</Badge></td>
                 </tr>
               ))}
-              {!data.produtosCriticos.length && <tr><td colSpan={7} className="py-8 text-center text-slate-400">Nenhum produto crítico no momento.</td></tr>}
+              {!data.produtosCriticos.length && <tr><td colSpan={7} className="py-8 text-center text-slate-400">Nenhum produto critico no momento.</td></tr>}
             </tbody>
           </table>
         </div>
       </Card>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <Card>
+        <h2 className="mb-4 text-lg font-bold text-white">Proximos modulos</h2>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
         {futuros.map((item) => (
-          <Card key={item} className="opacity-75">
+          <div key={item} className="rounded-lg border border-white/10 bg-slate-950/30 p-4 opacity-80">
             <Badge status="DEFAULT">Em breve</Badge>
             <h3 className="mt-3 font-semibold text-white">{item}</h3>
-            <p className="mt-1 text-xs text-slate-400">Estrutura reservada para proximas fases.</p>
-          </Card>
+            <p className="mt-1 text-xs text-slate-400">Reservado para proximas fases, sem dados reais ainda.</p>
+          </div>
         ))}
+        </div>
+      </Card>
       </div>
     </>
   );
@@ -156,9 +201,23 @@ export function DashboardPage() {
 
 function ChartCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card>
-      <h2 className="mb-4 text-lg font-bold text-white">{title}</h2>
+    <Card className="min-h-[360px]">
+      <h2 className="mb-1 text-lg font-bold text-white">{title}</h2>
+      <p className="mb-4 text-xs text-slate-500">Somente produtos ativos entram neste calculo.</p>
       {children}
     </Card>
+  );
+}
+
+function DashboardEmptyState({ title = "Cadastre produtos e movimente estoque para visualizar dados." }: { title?: string }) {
+  // Empty state evita que graficos sem dados parecam erro visual na fase inicial do sistema.
+  return (
+    <div className="grid min-h-[260px] place-items-center rounded-lg border border-dashed border-white/10 bg-slate-950/25 p-6 text-center">
+      <div>
+        <Sparkles className="mx-auto h-7 w-7 text-cyan-200" />
+        <p className="mt-3 text-sm font-semibold text-white">{title}</p>
+        <p className="mt-1 text-xs text-slate-400">Ainda nao ha dados suficientes para este painel.</p>
+      </div>
+    </div>
   );
 }

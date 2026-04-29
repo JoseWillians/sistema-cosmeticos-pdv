@@ -34,6 +34,14 @@ export function EstoqueTable({ itens, onMovimentar }: { itens: EstoqueProduto[];
               </td>
             </tr>
           ))}
+          {!itens.length && (
+            <tr>
+              <td colSpan={9} className="px-4 py-10 text-center">
+                <p className="font-semibold text-white">Nenhum produto ativo em estoque.</p>
+                <p className="mt-1 text-sm text-slate-400">Produtos arquivados nao aparecem nesta listagem, mas suas movimentacoes antigas continuam preservadas.</p>
+              </td>
+            </tr>
+          )}
         </tbody>
       </Table>
     </TableWrap>

@@ -8,7 +8,7 @@ import { formatNumber } from "../../../lib/formatters";
 import { unidadeProdutoLabels } from "../../../types/produto";
 import type { Produto } from "../../../types/produto";
 
-export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: Produto[]; onDelete: (id: number) => void; onMovimentar: (produto: Produto) => void }) {
+export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: Produto[]; onDelete: (produto: Produto) => void; onMovimentar: (produto: Produto) => void }) {
   // A tabela mostra os campos operacionais que o balconista precisa comparar rapidamente.
   return (
     <TableWrap>
@@ -36,13 +36,18 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar }: { produtos: 
                 <div className="flex gap-2">
                   <Link to={`/produtos/${produto.id}/editar`}><Button variant="secondary" className="h-9 px-3" icon={<Edit className="h-4 w-4" />} /></Link>
                   <Button variant="success" className="h-9 px-3" onClick={() => onMovimentar(produto)} iconLeft={<PackagePlus className="h-4 w-4" />} />
-                  <Button variant="danger" className="h-9 px-3" title="Arquivar produto" onClick={() => onDelete(produto.id)} iconLeft={<Archive className="h-4 w-4" />} />
+                  <Button variant="danger" className="h-9 px-3" title="Arquivar produto" onClick={() => onDelete(produto)} iconLeft={<Archive className="h-4 w-4" />} />
                 </div>
               </td>
             </tr>
           ))}
           {!produtos.length && (
-            <tr><td colSpan={10} className="px-4 py-10 text-center text-slate-400">Nenhum produto encontrado.</td></tr>
+            <tr>
+              <td colSpan={10} className="px-4 py-10 text-center">
+                <p className="font-semibold text-white">Nenhum produto ativo encontrado.</p>
+                <p className="mt-1 text-sm text-slate-400">Produtos arquivados nao aparecem nesta listagem.</p>
+              </td>
+            </tr>
           )}
         </tbody>
       </Table>

@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-04-29 - Dashboard, arquivamento de produto e estoque ativo
+
+### Corrigido
+
+- Movimentacao de estoque agora envia payload padronizado com `produto_id`, `tipo`, `quantidade` inteira e `observacao`.
+- Erros de movimentacao mostram a mensagem retornada pela API e registram `response.data` no console para depuracao.
+- Produto arquivado nao pode receber nova movimentacao de estoque.
+- View `vw_estoque_produtos` recriada para ocultar produtos arquivados da listagem ativa de Estoque.
+- Dashboard passou a ignorar movimentos e saldos de produtos arquivados.
+
+### Adicionado
+
+- Modal de confirmacao antes de arquivar produto.
+- Empty states melhores para Produtos, Estoque e graficos do Dashboard.
+- Migration `006_recreate_estoque_view_active_products.sql` para alinhar o banco local com a regra de estoque ativo.
+
+### Alterado
+
+- Dashboard recebeu cards de KPI com gradientes sutis, graficos mais altos, legends/tooltips e uma leitura rapida mais clara.
+- Produtos arquivados continuam no banco e preservam `estoque_movimentos`, mas nao aparecem nas listagens principais.
+- Swagger e `/dev/routes` documentam melhor movimentacao de estoque, soft delete e erro de produto arquivado.
+
+### Regras de negocio reforcadas
+
+- Arquivar produto preenche `produtos.excluido_em` e nao faz `DELETE` fisico.
+- Estoque ativo considera somente produtos com `excluido_em IS NULL`.
+- Marcas/categorias sao bloqueadas apenas por produtos ativos vinculados; produtos arquivados nao impedem o arquivamento.
+
+### Como testar
+
+1. Rodar `npm run build`.
+2. Criar produto ativo e abrir Estoque.
+3. Registrar `ENTRADA`, `SAIDA`, `AJUSTE_ENTRADA` e `AJUSTE_SAIDA`.
+4. Tentar quantidade `1.5` ou `0` e confirmar erro de validacao.
+5. Arquivar produto pela tela Produtos e confirmar o modal.
+6. Verificar que o produto some de Produtos e Estoque ativo, mas permanece no banco com `excluido_em`.
+
 ## 2026-04-29 - Dashboard evoluido e erro de arquivamento detalhado
 
 ### Adicionado

@@ -26,6 +26,10 @@ Arquivar marca ou categoria so e permitido quando nao houver produtos vinculados
 
 Quando uma tentativa de arquivamento falha por vinculo com produtos, a API retorna erro `409` com uma lista dos produtos que impedem a acao. Esse erro detalhado ajuda o usuario a editar, trocar marca/categoria ou arquivar os produtos antes de tentar novamente.
 
+Produtos tambem usam arquivamento logico. Ao arquivar um produto, o sistema preenche `produtos.excluido_em` e remove o item das listagens principais. O registro continua no banco e as movimentacoes antigas de estoque nao sao apagadas.
+
+Produto arquivado nao aparece em Produtos nem no Estoque ativo. Essa regra evita que o usuario movimente ou conte produto que saiu da operacao atual, mas preserva o historico para consulta tecnica no banco e no painel dev.
+
 ## Dashboard
 
 O dashboard atual foca na fase operacional existente do sistema:
@@ -45,6 +49,8 @@ Clientes, Vendas, Caixa, Financeiro e Relatorios avancados aparecem como cards `
 
 Na edicao, os dados comerciais podem ser alterados, mas o estoque inicial nao e reenviado. Qualquer ajuste de saldo deve ser tratado como movimento de estoque em uma etapa propria.
 
+O dashboard considera somente produtos ativos e nao arquivados. Se todos os produtos estiverem arquivados, os KPIs ficam zerados e os graficos exibem estados vazios orientando o usuario a cadastrar ou revisar produtos ativos.
+
 ## Fluxo de estoque
 
 O saldo de estoque e calculado pela tabela `estoque_movimentos`. Entradas somam saldo, saidas subtraem saldo e a view `vw_estoque_produtos` entrega o estoque disponivel para API, dashboard e telas.
@@ -61,6 +67,10 @@ Tipos de movimento:
 - `AJUSTE_SAIDA`: subtrai quantidade por correcao negativa apos contagem.
 
 A observacao informada no modal fica salva somente em `estoque_movimentos.observacao`. Ela documenta o motivo daquele movimento e nao altera a observacao do cadastro do produto.
+
+Produtos arquivados nao podem receber novos movimentos. Se houver erro operacional em um produto arquivado, a correcao deve preservar o historico e ser tratada por uma decisao explicita de cadastro, nao por exclusao fisica de movimentos antigos.
+
+Marcas e categorias so sao bloqueadas por produtos ativos vinculados (`excluido_em IS NULL`). Produtos arquivados mantem o vinculo historico, mas nao impedem o arquivamento de marca/categoria porque ja sairam das listagens operacionais.
 
 ## Login local
 

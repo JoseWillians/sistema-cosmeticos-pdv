@@ -60,6 +60,14 @@ export async function findProdutoById(id: number) {
   return rows[0] ?? null;
 }
 
+export async function findProdutoArchiveStatusById(id: number) {
+  const [rows] = await pool.execute<Array<RowDataPacket & { id: number; excluido_em: Date | null }>>(
+    "SELECT id, excluido_em FROM produtos WHERE id = ?",
+    [id]
+  );
+  return rows[0] ?? null;
+}
+
 export async function createProduto(data: ProdutoCreateInput) {
   const connection = await pool.getConnection();
   try {
@@ -117,6 +125,7 @@ export async function updateProduto(id: number, data: ProdutoUpdateInput) {
 }
 
 export async function deleteProduto(id: number) {
+  // Arquivamento logico preserva o produto e todo o historico de estoque_movimentos.
   const [result] = await pool.execute<ResultSetHeader>("UPDATE produtos SET excluido_em = NOW() WHERE id = ? AND excluido_em IS NULL", [id]);
   return result.affectedRows > 0;
 }
