@@ -23,9 +23,13 @@ const routeDocs = [
   { method: "PUT", path: "/produtos/:id", description: "Edita dados comerciais do produto.", status: "200 ou 404", body: { nome: "Produto editado", preco_venda: 80.99, unidade: "KIT", estoque_minimo: 6 } },
   { method: "DELETE", path: "/produtos/:id", description: "Arquiva produto com soft delete; nao apaga estoque_movimentos.", status: "204 ou 404" },
   { method: "PATCH", path: "/produtos/:id/restore", description: "Restaura produto arquivado.", status: "200 ou 404" },
+  { method: "POST", path: "/produtos/:id/imagem", description: "Upload local da imagem principal do produto.", status: "200 ou 400", body: "multipart/form-data campo imagem" },
   { method: "GET", path: "/estoque", description: "Lista estoque calculado pela view.", status: "200", link: true },
   { method: "POST", path: "/estoque/movimentos", description: "Registra reposicao, saida ou ajuste de estoque para produto ativo.", status: "201, 400, 404 ou 409", body: { produto_id: 1, tipo: "ENTRADA", quantidade: 10, custo_unitario: 7.5, compra_promocional: true, observacao: "Compra de reposicao" } },
-  { method: "GET", path: "/dashboard/resumo", description: "Retorna KPIs, graficos e estoque critico do dashboard.", status: "200", link: true }
+  { method: "GET", path: "/dashboard/resumo", description: "Retorna KPIs, graficos e estoque critico do dashboard.", status: "200", link: true },
+  { method: "GET", path: "/catalogo/home", description: "Home publica do catalogo com secoes e filtros visuais.", status: "200", link: true },
+  { method: "GET", path: "/catalogo/produtos", description: "Lista produtos publicos visiveis no catalogo.", status: "200", link: true },
+  { method: "GET", path: "/catalogo/produtos/:slug", description: "Detalhe publico do produto por slug.", status: "200 ou 404" }
 ];
 
 export const devHomeController: RequestHandler = async (_request, response, next) => {
@@ -53,7 +57,7 @@ export const devDatabaseController: RequestHandler = async (_request, response, 
     // Painel somente leitura: consulta metadados e LIMIT 50 para evitar telas pesadas.
     const previews = await devService.getTablePreviews();
     response.type("html").send(renderDevLayout("Banco", `
-      <section class="hero"><h1>Banco de dados</h1><p>Prévia visual das tabelas e views do MySQL.</p></section>
+      <section class="hero"><h1>Banco de dados</h1><p>Prévia visual das tabelas e views do PostgreSQL.</p></section>
       ${previews.map(renderTablePreview).join("")}
     `));
   } catch (error) {

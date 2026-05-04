@@ -5,7 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(3333),
   DB_HOST: z.string().default("localhost"),
-  DB_PORT: z.coerce.number().default(3306),
+  DB_PORT: z.coerce.number().default(5433),
   DB_NAME: z.string().default("sistema_cosmeticos"),
   DB_USER: z.string().default("cosmeticos"),
   DB_PASSWORD: z.string().default("cosmeticos123"),

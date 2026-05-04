@@ -37,3 +37,12 @@ export async function restoreProduto(id: number) {
   const { data } = await api.patch<Produto>(`/produtos/${id}/restore`);
   return data;
 }
+
+export async function uploadProdutoImagem(id: number, file: File) {
+  const formData = new FormData();
+  formData.append("imagem", file);
+  const { data } = await api.post<Produto>(`/produtos/${id}/imagem`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return data;
+}

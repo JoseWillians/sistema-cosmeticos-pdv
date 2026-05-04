@@ -58,3 +58,13 @@ export const deleteProdutoController: RequestHandler = async (request, response,
     next(error);
   }
 };
+
+export const uploadProdutoImagemController: RequestHandler = async (request, response, next) => {
+  try {
+    if (!request.file) return response.status(400).json({ message: "Envie uma imagem do produto." });
+    const imagemUrl = `/uploads/produtos/${request.file.filename}`;
+    response.json(await produtosService.updateImagem(Number(request.params.id), imagemUrl));
+  } catch (error) {
+    next(error);
+  }
+};

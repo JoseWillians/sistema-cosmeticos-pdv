@@ -5,8 +5,8 @@ Primeira versao local de gestao/PDV para loja de cosmeticos, com foco em cadastr
 ## Stack
 
 - Frontend: React, TypeScript, Vite, Tailwind CSS, Axios, React Router
-- Backend: Node.js, TypeScript, Express, Zod, mysql2/promise
-- Banco: MySQL 8 via Docker Compose
+- Backend: Node.js, TypeScript, Express, Zod, pg
+- Banco: PostgreSQL 16 via Docker Compose
 
 ## Como rodar
 
@@ -21,6 +21,15 @@ URLs padrao:
 - Web: http://localhost:5173
 - API: http://localhost:3333
 - Health: http://localhost:3333/health
+- Adminer: http://localhost:8081
+
+Banco local atual:
+
+- Sistema: PostgreSQL
+- Servidor no Adminer: `postgres`
+- Porta local: `5433`
+- Banco: `sistema_cosmeticos`
+- Usuario: `cosmeticos`
 
 Login local:
 

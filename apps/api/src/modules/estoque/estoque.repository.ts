@@ -1,8 +1,7 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../../database/connection.js";
 import type { EstoqueMovimentoInput } from "./estoque.schema.js";
 
-export interface EstoqueProduto extends RowDataPacket {
+export interface EstoqueProduto {
   produto_id: number;
   codigo: string;
   produto: string;
@@ -15,7 +14,7 @@ export interface EstoqueProduto extends RowDataPacket {
   status_estoque: string;
 }
 
-export interface EstoqueMovimento extends RowDataPacket {
+export interface EstoqueMovimento {
   id: number;
   produto_id: number;
   tipo: string;
@@ -28,7 +27,7 @@ export interface EstoqueMovimento extends RowDataPacket {
 
 // O saldo vem da view para evitar duplicar o calculo de entradas e saidas na aplicacao.
 export async function listEstoque() {
-  const [rows] = await pool.query<EstoqueProduto[]>(
+  const { rows } = await pool.query<EstoqueProduto>(
     // A view ja filtra produtos arquivados para a listagem representar somente estoque ativo.
     "SELECT * FROM vw_estoque_produtos ORDER BY produto"
   );
@@ -37,8 +36,11 @@ export async function listEstoque() {
 
 export async function createEstoqueMovimento(data: EstoqueMovimentoInput) {
   // Reposicao e ajuste sempre entram como movimento; o saldo disponivel continua derivado da view.
-  const [result] = await pool.execute<ResultSetHeader>(
-    "INSERT INTO estoque_movimentos (produto_id, tipo, quantidade, custo_unitario, compra_promocional, observacao) VALUES (?, ?, ?, ?, ?, ?)",
+  const { rows } = await pool.query<EstoqueMovimento>(
+    `INSERT INTO estoque_movimentos
+      (produto_id, tipo, quantidade, custo_unitario, compra_promocional, observacao)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
     [
       data.produto_id,
       data.tipo,
@@ -48,12 +50,12 @@ export async function createEstoqueMovimento(data: EstoqueMovimentoInput) {
       data.observacao || null
     ]
   );
-  return findEstoqueMovimentoById(result.insertId);
+  return rows[0] ?? null;
 }
 
 export async function findEstoqueMovimentoById(id: number) {
-  const [rows] = await pool.execute<EstoqueMovimento[]>(
-    "SELECT * FROM estoque_movimentos WHERE id = ?",
+  const { rows } = await pool.query<EstoqueMovimento>(
+    "SELECT * FROM estoque_movimentos WHERE id = $1",
     [id]
   );
   return rows[0] ?? null;

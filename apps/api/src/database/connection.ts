@@ -1,14 +1,18 @@
-import mysql from "mysql2/promise";
+import { Pool, types } from "pg";
 import { databaseConfig } from "../config/database.js";
 
-// Pool compartilhado da API. O mysql2/promise evita callbacks e facilita transacoes nos repositories.
-export const pool = mysql.createPool(databaseConfig);
+// O PostgreSQL retorna NUMERIC como string por padrao; parsear aqui evita conversoes repetidas nas telas.
+types.setTypeParser(1700, (value) => Number.parseFloat(value));
+types.setTypeParser(20, (value) => Number.parseInt(value, 10));
+
+// Pool compartilhado da API. Mantemos a conexao centralizada para repositories seguirem queries parametrizadas.
+export const pool = new Pool(databaseConfig);
 
 export async function testDatabaseConnection() {
-  const connection = await pool.getConnection();
+  const client = await pool.connect();
   try {
-    await connection.ping();
+    await client.query("SELECT 1");
   } finally {
-    connection.release();
+    client.release();
   }
 }

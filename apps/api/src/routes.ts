@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
 import { swaggerSpec } from "./config/swagger.js";
 import { categoriasRoutes } from "./modules/categorias/categorias.routes.js";
+import { catalogoRoutes } from "./modules/catalogo/catalogo.routes.js";
 import { devRoutes } from "./modules/dev/dev.routes.js";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.routes.js";
 import { estoqueRoutes } from "./modules/estoque/estoque.routes.js";
@@ -34,6 +35,7 @@ routes.use("/categorias", categoriasRoutes);
 routes.use("/produtos", produtosRoutes);
 routes.use("/estoque", estoqueRoutes);
 routes.use("/dashboard", dashboardRoutes);
+routes.use("/catalogo", catalogoRoutes);
 
 if (env.ENABLE_DEV_TOOLS) {
   // Ferramentas locais de diagnostico. Nao exibem credenciais e devem ficar desligadas fora do ambiente local.

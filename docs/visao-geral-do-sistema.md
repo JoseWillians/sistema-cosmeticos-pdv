@@ -11,6 +11,7 @@ O JW PDV e um sistema local de gestao para loja de cosmeticos. O MVP atual prior
 - Cadastros auxiliares de marcas e categorias.
 - Produtos.
 - Estoque.
+- Catalogo publico visual em `/catalogo`.
 
 ## Fluxo de produto
 
@@ -93,6 +94,45 @@ Em entradas de estoque, o movimento pode registrar `custo_unitario` e `compra_pr
 
 Marcas e categorias so sao bloqueadas por produtos ativos vinculados (`excluido_em IS NULL`). Produtos arquivados mantem o vinculo historico, mas nao impedem o arquivamento de marca/categoria porque ja sairam das listagens operacionais.
 
+## Catalogo publico
+
+O catalogo publico fica dentro do mesmo frontend em `/catalogo`. Ele e uma vitrine visual para produtos, sem venda real, carrinho persistente, checkout ou login de cliente.
+
+Rotas publicas atuais:
+
+- `/catalogo`
+- `/catalogo/produto/:slug`
+
+API publica atual:
+
+- `GET /catalogo/home`
+- `GET /catalogo/produtos`
+- `GET /catalogo/produtos/:slug`
+
+O tema inicial e `cosmeticos`. Ele centraliza nome visual, textos, cores, labels, WhatsApp e rodape em arquivos de tema. A estrutura fica preparada para temas futuros, como `alimenticio`, `farmaceutico` e `geral`, mas eles ainda nao foram implementados.
+
+Produtos aparecem no catalogo apenas quando:
+
+- nao estao arquivados;
+- estao ativos;
+- `visivel_no_catalogo = true`.
+
+Produto sem imagem usa placeholder visual. Produto com promocao ativa mostra preco padrao riscado e preco promocional em destaque.
+
+## Imagem principal do produto
+
+O admin de produtos suporta imagem principal por URL e upload local. O upload salva o arquivo em `uploads/produtos` e grava apenas o caminho em `produtos.imagem_principal_url`.
+
+Arquivos de imagem nao sao salvos no banco. O banco armazena somente URL/caminho para manter os registros leves e simples de consultar.
+
+Formatos aceitos no upload local:
+
+- JPEG
+- PNG
+- WEBP
+
+Limite atual: ate 3MB.
+
 ## Login local
 
 O login e propositalmente simples para o MVP. A API aceita `admin` / `admin` e retorna um token fake salvo no `localStorage`.
@@ -108,13 +148,26 @@ O login e propositalmente simples para o MVP. A API aceita `admin` / `admin` e r
 
 Para acessar o Adminer:
 
-- Sistema: MySQL
-- Servidor: mysql
+- Sistema: PostgreSQL
+- Servidor: postgres
 - Usuario: cosmeticos
 - Senha: cosmeticos123
 - Banco: sistema_cosmeticos
 
 As rotas `/dev` e `/api-docs` dependem de `ENABLE_DEV_TOOLS=true` e existem apenas para uso local.
+
+## Banco de dados atual
+
+O banco principal atual e PostgreSQL 16 via Docker Compose.
+
+- Servico Docker: `postgres`
+- Porta local: `5433`
+- Banco: `sistema_cosmeticos`
+- Usuario local: `cosmeticos`
+- Schema inicial: `database/postgres/schema.sql`
+- Seeds: `database/postgres/seeds.sql`
+
+O projeto usava MySQL anteriormente. O MySQL antigo nao foi apagado e seus volumes nao devem ser removidos sem backup e autorizacao. Antes da migracao foi gerado um backup local em `database/backups/mysql-backup-before-postgres-migration.sql`; a pasta `database/backups` fica fora do Git.
 
 ## Segurança básica atual
 
@@ -127,9 +180,9 @@ As rotas `/dev` e `/api-docs` dependem de `ENABLE_DEV_TOOLS=true` e existem apen
 
 ## Busca e indices
 
-A busca de produtos usa debounce no frontend para evitar uma chamada a API a cada tecla digitada. No backend/banco, MySQL usa indices em campos de busca e filtro como codigo, nome, marca, categoria, ativo e `excluido_em`.
+A busca de produtos usa debounce no frontend para evitar uma chamada a API a cada tecla digitada. No backend/banco, PostgreSQL usa indices em campos de busca e filtro como codigo, nome, slug, marca, categoria, ativo e `excluido_em`.
 
-Nao ha arvore binaria manual nem arvore de decisao no codigo da aplicacao. Para este sistema, a abordagem correta e usar indices do MySQL, filtros parametrizados e debounce na interface.
+Nao ha arvore binaria manual nem arvore de decisao no codigo da aplicacao. Para este sistema, a abordagem correta e usar indices do PostgreSQL, filtros parametrizados e debounce na interface.
 
 ## Arquivos que nao devem subir para o Git
 
@@ -147,4 +200,4 @@ Nao ha arvore binaria manual nem arvore de decisao no codigo da aplicacao. Para 
 - Relatorios.
 - Reservas.
 - Fiscal/NFC-e.
-- Upload real de imagem de produto.
+- Upload avancado com armazenamento externo/CDN, se houver deploy publico.

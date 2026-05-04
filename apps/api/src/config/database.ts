@@ -6,8 +6,5 @@ export const databaseConfig = {
   database: env.DB_NAME,
   user: env.DB_USER,
   password: env.DB_PASSWORD,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  decimalNumbers: true
+  max: 10
 };

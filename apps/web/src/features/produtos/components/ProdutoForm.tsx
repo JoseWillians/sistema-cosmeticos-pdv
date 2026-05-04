@@ -36,6 +36,14 @@ const initial: ProdutoFormState = {
   estoque_minimo: 0,
   controlar_estoque: true,
   codigo_barras: "",
+  imagem_principal_url: "",
+  slug: "",
+  descricao_curta: "",
+  visivel_no_catalogo: true,
+  destaque: false,
+  mais_vendido: false,
+  novo: false,
+  ordem_exibicao: null,
   descricao: "",
   observacoes: ""
 };
@@ -78,6 +86,14 @@ export function ProdutoForm({
         estoque_minimo: produto.estoque_minimo,
         controlar_estoque: produto.controlar_estoque,
         codigo_barras: produto.codigo_barras ?? "",
+        imagem_principal_url: produto.imagem_principal_url ?? "",
+        slug: produto.slug ?? "",
+        descricao_curta: produto.descricao_curta ?? "",
+        visivel_no_catalogo: Boolean(produto.visivel_no_catalogo ?? true),
+        destaque: Boolean(produto.destaque),
+        mais_vendido: Boolean(produto.mais_vendido),
+        novo: Boolean(produto.novo),
+        ordem_exibicao: produto.ordem_exibicao ?? null,
         descricao: produto.descricao ?? "",
         observacoes: produto.observacoes ?? "",
         estoque_inicial: 0
@@ -109,6 +125,14 @@ export function ProdutoForm({
         promocao_observacao: form.promocao_observacao || null,
         marca_id: Number(form.marca_id),
         categoria_id: Number(form.categoria_id),
+        imagem_principal_url: form.imagem_principal_url || null,
+        slug: form.slug || null,
+        descricao_curta: form.descricao_curta || null,
+        visivel_no_catalogo: Boolean(form.visivel_no_catalogo),
+        destaque: Boolean(form.destaque),
+        mais_vendido: Boolean(form.mais_vendido),
+        novo: Boolean(form.novo),
+        ordem_exibicao: form.ordem_exibicao === null || form.ordem_exibicao === undefined ? null : Number(form.ordem_exibicao),
         controlar_estoque: Boolean(form.controlar_estoque),
         estoque_inicial: Math.trunc(Number(form.estoque_inicial ?? 0)),
         estoque_minimo: Math.trunc(Number(form.estoque_minimo ?? 0))
@@ -162,6 +186,32 @@ export function ProdutoForm({
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="Descricao" value={form.descricao ?? ""} onChange={(e) => setField("descricao", e.target.value)} />
           <Input label="Observacoes" value={form.observacoes ?? ""} onChange={(e) => setField("observacoes", e.target.value)} />
+        </div>
+        <div className="rounded-lg border border-white/10 bg-slate-950/25 p-4">
+          <h2 className="mb-1 font-semibold text-white">Catalogo publico</h2>
+          <p className="mb-4 text-xs text-slate-400">Esses campos controlam a vitrine publica. Produto arquivado nunca aparece no catalogo.</p>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Input label="URL da imagem principal" value={form.imagem_principal_url ?? ""} onChange={(e) => setField("imagem_principal_url", e.target.value)} />
+            <Input label="Slug publico" value={form.slug ?? ""} onChange={(e) => setField("slug", e.target.value)} placeholder="gerado automaticamente" />
+            <Input label="Descricao curta" value={form.descricao_curta ?? ""} onChange={(e) => setField("descricao_curta", e.target.value)} />
+            <Input label="Ordem de exibicao" type="number" value={form.ordem_exibicao ?? ""} onChange={(e) => setField("ordem_exibicao", e.target.value ? Number(e.target.value) : null)} />
+            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-950/35 px-3 text-sm text-slate-200">
+              <input type="checkbox" checked={Boolean(form.visivel_no_catalogo)} onChange={(e) => setField("visivel_no_catalogo", e.target.checked)} />
+              Visivel no catalogo
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-950/35 px-3 text-sm text-slate-200">
+              <input type="checkbox" checked={Boolean(form.destaque)} onChange={(e) => setField("destaque", e.target.checked)} />
+              Destaque
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-950/35 px-3 text-sm text-slate-200">
+              <input type="checkbox" checked={Boolean(form.mais_vendido)} onChange={(e) => setField("mais_vendido", e.target.checked)} />
+              Mais vendido
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-slate-950/35 px-3 text-sm text-slate-200">
+              <input type="checkbox" checked={Boolean(form.novo)} onChange={(e) => setField("novo", e.target.checked)} />
+              Novo
+            </label>
+          </div>
         </div>
         <div className="rounded-lg border border-white/10 bg-slate-950/25 p-4">
           <div className="mb-4 flex items-center justify-between gap-3">

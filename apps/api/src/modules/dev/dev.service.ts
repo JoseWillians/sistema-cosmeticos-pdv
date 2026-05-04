@@ -1,16 +1,15 @@
-import type { RowDataPacket } from "mysql2";
 import { pool } from "../../database/connection.js";
 
-interface TableRow extends RowDataPacket {
-  TABLE_NAME: string;
+interface TableRow {
+  table_name: string;
 }
 
-interface CountRow extends RowDataPacket {
+interface CountRow {
   total: number;
 }
 
 function quoteIdentifier(identifier: string) {
-  return `\`${identifier.replace(/`/g, "``")}\``;
+  return `"${identifier.replace(/"/g, "\"\"")}"`;
 }
 
 export const devService = {
@@ -20,31 +19,31 @@ export const devService = {
   },
 
   async getTablePreviews() {
-    const [tables] = await pool.execute<TableRow[]>(
-      "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE IN ('BASE TABLE', 'VIEW') ORDER BY TABLE_NAME"
+    const { rows: tables } = await pool.query<TableRow>(
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type IN ('BASE TABLE', 'VIEW') ORDER BY table_name"
     );
 
     return Promise.all(tables.map(async (table) => {
-      const safeName = quoteIdentifier(table.TABLE_NAME);
+      const safeName = quoteIdentifier(table.table_name);
       // INFORMATION_SCHEMA define a lista de tabelas; ainda assim escapamos o identificador antes do SELECT.
-      const [countRows] = await pool.query<CountRow[]>(`SELECT COUNT(*) AS total FROM ${safeName}`);
-      const [previewRows] = await pool.query<RowDataPacket[]>(`SELECT * FROM ${safeName} LIMIT 50`);
-      const columns = previewRows.length ? Object.keys(previewRows[0]) : await this.getColumns(table.TABLE_NAME);
+      const { rows: countRows } = await pool.query<CountRow>(`SELECT COUNT(*)::int AS total FROM ${safeName}`);
+      const { rows: previewRows } = await pool.query<Record<string, unknown>>(`SELECT * FROM ${safeName} LIMIT 50`);
+      const columns = previewRows.length ? Object.keys(previewRows[0]) : await this.getColumns(table.table_name);
 
       return {
-        name: table.TABLE_NAME,
+        name: table.table_name,
         count: countRows[0]?.total ?? 0,
         columns,
-        rows: previewRows as Record<string, unknown>[]
+        rows: previewRows
       };
     }));
   },
 
   async getColumns(tableName: string) {
-    const [columns] = await pool.execute<RowDataPacket[]>(
-      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION",
+    const { rows: columns } = await pool.query<{ column_name: string }>(
+      "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position",
       [tableName]
     );
-    return columns.map((column) => String(column.COLUMN_NAME));
+    return columns.map((column) => column.column_name);
   }
 };

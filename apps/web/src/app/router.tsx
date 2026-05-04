@@ -8,9 +8,13 @@ import { CategoriasPage } from "../pages/categorias/CategoriasPage";
 import { CadastrosPage } from "../pages/cadastros/CadastrosPage";
 import { ProdutoFormPage } from "../pages/produtos/ProdutoFormPage";
 import { ProdutosPage } from "../pages/produtos/ProdutosPage";
+import { CatalogoHomePage } from "../pages/catalogo/CatalogoHomePage";
+import { CatalogoProdutoPage } from "../pages/catalogo/CatalogoProdutoPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/catalogo", element: <CatalogoHomePage /> },
+  { path: "/catalogo/produto/:slug", element: <CatalogoProdutoPage /> },
   {
     path: "/",
     element: <DashboardLayout />,

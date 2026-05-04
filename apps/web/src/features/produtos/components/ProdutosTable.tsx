@@ -1,4 +1,4 @@
-import { Archive, Edit, PackagePlus, RotateCcw } from "lucide-react";
+import { Archive, Edit, ImageIcon, PackagePlus, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
@@ -6,6 +6,7 @@ import { Table, TableWrap } from "../../../components/ui/Table";
 import { toCurrency } from "../../../lib/currency";
 import { formatNumber } from "../../../lib/formatters";
 import { unidadeProdutoLabels } from "../../../types/produto";
+import { api } from "../../../lib/api";
 import type { Produto } from "../../../types/produto";
 
 export function ProdutosTable({ produtos, onDelete, onMovimentar, onRestore }: { produtos: Produto[]; onDelete: (produto: Produto) => void; onMovimentar: (produto: Produto) => void; onRestore?: (produto: Produto) => void }) {
@@ -15,7 +16,7 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar, onRestore }: {
       <Table>
         <thead className="bg-white/5 text-xs uppercase text-slate-400">
           <tr>
-            {["Codigo", "Produto", "Unidade", "Marca", "Categoria", "Estoque", "Custo", "Venda", "Status", "Acoes"].map((head) => (
+            {["Imagem", "Codigo", "Produto", "Unidade", "Marca", "Categoria", "Estoque", "Custo", "Venda", "Status", "Acoes"].map((head) => (
               <th key={head} className="px-4 py-3 font-semibold">{head}</th>
             ))}
           </tr>
@@ -23,6 +24,13 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar, onRestore }: {
         <tbody>
           {produtos.map((produto) => (
             <tr key={produto.id} className="border-t border-white/10 text-slate-200">
+              <td className="px-4 py-3">
+                {produto.imagem_principal_url ? (
+                  <img className="h-12 w-12 rounded-lg object-cover ring-1 ring-white/10" src={`${api.defaults.baseURL}${produto.imagem_principal_url}`} alt={produto.nome} />
+                ) : (
+                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-white/10 text-slate-400"><ImageIcon className="h-5 w-5" /></div>
+                )}
+              </td>
               <td className="px-4 py-3 font-mono text-xs text-cyan-200">{produto.codigo}</td>
               <td className="px-4 py-3 font-medium text-white">
                 <div className="flex flex-wrap items-center gap-2">
@@ -58,7 +66,7 @@ export function ProdutosTable({ produtos, onDelete, onMovimentar, onRestore }: {
           ))}
           {!produtos.length && (
             <tr>
-              <td colSpan={10} className="px-4 py-10 text-center">
+              <td colSpan={11} className="px-4 py-10 text-center">
                 <p className="font-semibold text-white">Nenhum produto ativo encontrado.</p>
                 <p className="mt-1 text-sm text-slate-400">Produtos arquivados nao aparecem nesta listagem.</p>
               </td>

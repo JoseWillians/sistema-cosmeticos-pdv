@@ -1,4 +1,4 @@
--- Indices para buscas e filtros comuns. O MySQL usa esses indices; nao ha necessidade
+-- Indices historicos do ciclo MySQL. O PostgreSQL atual define indices em database/postgres/schema.sql; nao ha necessidade
 -- de criar estruturas manuais como arvore binaria no codigo da aplicacao.
 SET @schema_name = DATABASE();
 

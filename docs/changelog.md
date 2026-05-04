@@ -1,5 +1,70 @@
 # Changelog
 
+## 2026-05-04 - Migração local para PostgreSQL e ajuste pós-mudança de pasta
+
+### Alterado
+
+- Projeto validado no caminho novo `C:\Dev\Projetos\sistema-cosmeticos-pdv`.
+- Docker Compose passou a usar PostgreSQL 16 no servico `postgres`, com porta local `5433`.
+- Adminer foi mantido em `http://localhost:8081`, agora apontando para PostgreSQL.
+- Backend migrado de `mysql2/promise` para `pg` com `Pool` compartilhado.
+- Queries dos repositories foram convertidas para parametros `$1`, `$2` e `RETURNING`.
+- Painel `/dev/database` passou a consultar `information_schema` do PostgreSQL.
+- Upload local passou a resolver a raiz do projeto para evitar gravar arquivos na pasta errada apos a mudanca de diretorio.
+
+### Adicionado
+
+- `apps/web/.env.example` com `VITE_API_URL=http://localhost:3333`.
+- Estrutura `database/postgres/` com `schema.sql`, `seeds.sql` e pasta `migrations`.
+- Backup logico do MySQL antes da migracao em `database/backups/mysql-backup-before-postgres-migration.sql`, ignorado pelo Git.
+
+### Regras e cuidados
+
+- O MySQL antigo nao foi apagado.
+- Volumes Docker nao foram removidos.
+- `uploads/` continua fora do Git.
+- O banco atual documentado passa a ser PostgreSQL; migrations MySQL antigas ficam como historico do projeto.
+
+### Como testar
+
+1. Rodar `docker compose up -d`.
+2. Rodar `npm run build`.
+3. Abrir `http://localhost:3333/health`.
+4. Abrir `http://localhost:3333/dev/database`.
+5. Abrir Adminer em `http://localhost:8081` com sistema PostgreSQL e servidor `postgres`.
+
+## 2026-04-29 - Catalogo publico e imagem principal do produto
+
+### Adicionado
+
+- Primeira versao visual do catalogo publico em `/catalogo`.
+- Pagina publica de detalhes em `/catalogo/produto/:slug`.
+- Tema inicial `cosmeticos` com visual claro, off-white, cards brancos, verde salvia, lavanda e grafite.
+- Componentes do catalogo: header, hero, categorias, cards de produto, secoes, beneficios, footer e botao flutuante de WhatsApp.
+- API publica:
+  - `GET /catalogo/home`
+  - `GET /catalogo/produtos`
+  - `GET /catalogo/produtos/:slug`
+- Campos de catalogo no produto: imagem principal, slug, descricao curta, visibilidade, destaque, mais vendido, novo e ordem de exibicao.
+- Upload local de imagem principal em `POST /produtos/:id/imagem`, salvando arquivos em `uploads/produtos`.
+- Placeholder visual para produto sem imagem no admin e no catalogo.
+
+### Regras de negocio
+
+- Produto arquivado ou inativo nao aparece no catalogo publico.
+- Produto com `visivel_no_catalogo=false` nao aparece no catalogo.
+- Produto sem imagem usa placeholder visual, sem depender de imagem externa.
+- O catalogo e apenas vitrine publica; ainda nao existe venda real, carrinho persistente ou checkout.
+
+### Arquivos principais
+
+- `apps/api/src/modules/catalogo/*`
+- `apps/api/src/shared/middlewares/uploadProdutoImagem.ts`
+- `apps/api/src/shared/utils/slugify.ts`
+- `apps/web/src/pages/catalogo/*`
+- `apps/web/src/features/catalogo/*`
+- `database/migrations/009_add_catalog_product_fields.sql`
+
 ## 2026-04-29 - Rate limit local e busca com debounce
 
 ### Corrigido
@@ -20,7 +85,7 @@
 
 ### Observacao tecnica
 
-- Busca deve usar debounce no frontend e indices no MySQL. Nao foi implementada arvore binaria ou arvore de decisao porque o problema era bloqueio por rate limit, nao algoritmo de busca em memoria.
+- Busca deve usar debounce no frontend e indices do banco relacional. No estado atual, esses indices ficam no PostgreSQL. Nao foi implementada arvore binaria ou arvore de decisao porque o problema era bloqueio por rate limit, nao algoritmo de busca em memoria.
 
 ## 2026-04-29 - Cadastros inteligentes e precos promocionais
 
@@ -268,3 +333,10 @@
 4. Confirmar que estoque inicial e minimo sobem de 1 em 1.
 5. Editar um produto e confirmar retorno para `/produtos`.
 6. Verificar a listagem de produtos e a pagina de estoque.
+
+## Referencias Codex
+
+- Obsidian: [[06-Codex/checklist-antes-de-pedir-ao-codex]]
+- Seguranca: [[07-Security/checklist-seguranca-web]]
+- Banco: [[08-Databases/checklist-banco-de-dados]]
+
